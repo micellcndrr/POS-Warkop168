@@ -341,7 +341,7 @@
       <div class="grid-menu" id="menuGrid"></div>
     </div>
 
-    <!-- Panel Right Cart (Fitur Akses Karyawan) -->
+    <!-- Panel Right Cart (Akses Karyawan) -->
     <div class="cart-panel">
       <h2 class="cart-title">Pesanan</h2>
       
@@ -358,7 +358,7 @@
         <!-- FITUR UTAMA KARYAWAN -->
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Metode Pembayaran</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran Harian</button>
-        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Penjualan & Tutup Buku</button>
+        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Penjualan & Tutup Buku Bulanan</button>
         <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
       </div>
     </div>
@@ -446,7 +446,7 @@
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Jam</th>
+              <th>Tanggal</th>
               <th>Keterangan Pengeluaran</th>
               <th>Nominal</th>
               <th>Aksi</th>
@@ -462,11 +462,11 @@
     </div>
   </div>
 
-  <!-- Modal Laporan Penjualan & Tutup Buku (Akses Karyawan) -->
+  <!-- Modal Laporan Penjualan & Tutup Buku Bulanan (Akses Karyawan) -->
   <div id="historyModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>Laporan Penjualan & Tutup Buku Harian</h3>
+        <h3>Laporan Penjualan & Tutup Buku Bulanan</h3>
         <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
@@ -474,7 +474,7 @@
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Jam</th>
+              <th>Tanggal Transaksi</th>
               <th>Menu</th>
               <th>Qty</th>
               <th>Metode</th>
@@ -487,20 +487,20 @@
 
       <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Omset (Kotor):</span>
+          <span>Total Omset Bulanan:</span>
           <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Pengeluaran:</span>
+          <span>Total Pengeluaran Bulanan:</span>
           <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-          <span>Laba Bersih Harian:</span>
+          <span>Laba Bersih Bulanan:</span>
           <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
         </div>
         
         <div style="display:flex; justify-content:flex-end;">
-          <button onclick="resetDailyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Hari Ini (Reset Harian)</button>
+          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
         </div>
       </div>
     </div>
@@ -567,7 +567,7 @@
       <!-- Fitur Admin 5: Download Rekap & Audit Log -->
       <div style="margin-top:12px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
         <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📋 Audit Log Restok</button>
-        <button onclick="exportDailyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📥 Download Rekap Excel</button>
+        <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📥 Download Rekap Excel Bulanan</button>
       </div>
     </div>
   </div>
@@ -584,7 +584,7 @@
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Tanggal & Waktu</th>
+              <th>Tanggal</th>
               <th>Nama Menu</th>
               <th>Tambahan Stok</th>
               <th>Keterangan</th>
@@ -609,8 +609,8 @@
 
     let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
     let cart = [];
-    let dailyTransactions = JSON.parse(localStorage.getItem('warkop_daily_tx')) || [];
-    let dailyExpenses = JSON.parse(localStorage.getItem('warkop_daily_exp')) || [];
+    let monthlyTransactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
+    let monthlyExpenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
     let restockLogs = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
@@ -856,12 +856,14 @@
 
     function executeTransaction(method) {
       const now = new Date();
+      const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      
       cart.forEach(item => {
         const prod = products.find(p => p.id === item.id);
         if (prod) prod.stock -= item.qty;
 
-        dailyTransactions.push({
-          Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        monthlyTransactions.push({
+          Tanggal: formattedDate,
           Menu: item.name,
           Kategori: item.category,
           Harga: item.price,
@@ -872,7 +874,7 @@
       });
 
       saveProducts();
-      localStorage.setItem('warkop_daily_tx', JSON.stringify(dailyTransactions));
+      localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
     }
 
     function clearCart() {
@@ -900,22 +902,24 @@
       if (!name || isNaN(amount) || amount <= 0) return;
 
       const now = new Date();
-      dailyExpenses.push({
+      const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      monthlyExpenses.push({
         id: Date.now(),
-        Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        Tanggal: formattedDate,
         Nama: name,
         Nominal: amount
       });
 
-      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       document.getElementById('expenseName').value = '';
       document.getElementById('expenseAmount').value = '';
       renderExpenseTable();
     }
 
     function deleteExpense(id) {
-      dailyExpenses = dailyExpenses.filter(exp => exp.id !== id);
-      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      monthlyExpenses = monthlyExpenses.filter(exp => exp.id !== id);
+      localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       renderExpenseTable();
     }
 
@@ -924,14 +928,14 @@
       tbody.innerHTML = '';
       let totalExp = 0;
 
-      if (dailyExpenses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada pengeluaran hari ini</td></tr>';
+      if (monthlyExpenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada catatan pengeluaran bulan ini</td></tr>';
       } else {
-        dailyExpenses.forEach(exp => {
+        monthlyExpenses.forEach(exp => {
           totalExp += exp.Nominal;
           tbody.innerHTML += `
             <tr>
-              <td>${exp.Waktu}</td>
+              <td>${exp.Tanggal}</td>
               <td>${exp.Nama}</td>
               <td>Rp ${exp.Nominal.toLocaleString('id-ID')}</td>
               <td>
@@ -945,22 +949,22 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
-    /* Modal Laporan Penjualan & Tutup Buku (Fitur Karyawan) */
+    /* Modal Laporan Penjualan & Tutup Buku Bulanan (Fitur Karyawan) */
     function openHistoryModal() {
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '';
 
       let totalOmset = 0;
-      let totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+      let totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
 
-      if (dailyTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi hari ini</td></tr>';
+      if (monthlyTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data transaksi bulan ini</td></tr>';
       } else {
-        dailyTransactions.forEach(tx => {
+        monthlyTransactions.forEach(tx => {
           totalOmset += tx.Total;
           tbody.innerHTML += `
             <tr>
-              <td>${tx.Waktu}</td>
+              <td>${tx.Tanggal}</td>
               <td>${tx.Menu}</td>
               <td>${tx.Qty}</td>
               <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
@@ -982,14 +986,14 @@
       document.getElementById('historyModal').style.display = 'none';
     }
 
-    function resetDailyData() {
-      if (confirm('Yakin ingin Tutup Buku Hari Ini? Seluruh transaksi dan catatan pengeluaran harian akan di-reset untuk besok.')) {
-        dailyTransactions = [];
-        dailyExpenses = [];
-        localStorage.removeItem('warkop_daily_tx');
-        localStorage.removeItem('warkop_daily_exp');
+    function resetMonthlyData() {
+      if (confirm('Yakin ingin Tutup Buku Bulan Ini? Seluruh transaksi dan catatan pengeluaran bulanan akan di-reset.')) {
+        monthlyTransactions = [];
+        monthlyExpenses = [];
+        localStorage.removeItem('warkop_monthly_tx');
+        localStorage.removeItem('warkop_monthly_exp');
         openHistoryModal();
-        alert('Tutup buku berhasil! Data harian telah dibersihkan.');
+        alert('Tutup buku bulanan berhasil! Data bulan ini telah dibersihkan.');
       }
     }
 
@@ -1019,7 +1023,7 @@
         saveProducts();
 
         const now = new Date();
-        const dateStr = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         restockLogs.unshift({
           Waktu: dateStr,
@@ -1143,16 +1147,16 @@
       document.getElementById('restockLogModal').style.display = 'none';
     }
 
-    function exportDailyRecapExcel() {
-      if (dailyTransactions.length === 0 && dailyExpenses.length === 0) {
-        alert('Belum ada data transaksi atau pengeluaran hari ini!');
+    function exportMonthlyRecapExcel() {
+      if (monthlyTransactions.length === 0 && monthlyExpenses.length === 0) {
+        alert('Belum ada data transaksi atau pengeluaran bulan ini!');
         return;
       }
 
       const menuSummary = {};
       let totalOmset = 0;
 
-      dailyTransactions.forEach(tx => {
+      monthlyTransactions.forEach(tx => {
         if (!menuSummary[tx.Menu]) {
           menuSummary[tx.Menu] = { Kategori: tx.Kategori, Harga: tx.Harga, Qty: 0, Total: 0 };
         }
@@ -1161,14 +1165,14 @@
         totalOmset += tx.Total;
       });
 
-      const totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+      const totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
       const netProfit = totalOmset - totalExpense;
 
       const excelData = [
-        ["LAPORAN REKAP HARIAN WARKOP"],
-        ["Tanggal:", new Date().toLocaleDateString('id-ID')],
+        ["LAPORAN REKAP BULANAN WARKOP"],
+        ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
-        ["--- RINGKASAN PENJUALAN ---"],
+        ["--- RINGKASAN PENJUALAN BULANAN ---"],
         ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
       ];
 
@@ -1176,37 +1180,37 @@
       for (const [menuName, val] of Object.entries(menuSummary)) {
         excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
       }
-      excelData.push(["", "TOTAL OMSET PENJUALAN", "", "", "", totalOmset]);
+      excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
       excelData.push([""]);
 
-      excelData.push(["--- RINGKASAN PENGELUARAN ---"]);
-      excelData.push(["No", "Jam", "Keterangan Pengeluaran", "", "", "Nominal"]);
+      excelData.push(["--- RINGKASAN PENGELUARAN BULANAN ---"]);
+      excelData.push(["No", "Tanggal", "Keterangan Pengeluaran", "", "", "Nominal"]);
       
       let noExp = 1;
-      dailyExpenses.forEach(exp => {
-        excelData.push([noExp++, exp.Waktu, exp.Nama, "", "", exp.Nominal]);
+      monthlyExpenses.forEach(exp => {
+        excelData.push([noExp++, exp.Tanggal, exp.Nama, "", "", exp.Nominal]);
       });
-      excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
+      excelData.push(["", "TOTAL PENGELUARAN BULANAN", "", "", "", totalExpense]);
       excelData.push([""]);
 
       excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
-      excelData.push(["Waktu", "Nama Menu", "Tambahan Stok", "Keterangan"]);
+      excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
 
       restockLogs.forEach(log => {
         excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
       });
       excelData.push([""]);
 
-      excelData.push(["--- RINGKASAN LABA RUGI ---"]);
+      excelData.push(["--- RINGKASAN LABA RUGI BULANAN ---"]);
       excelData.push(["Total Omset Penjualan", totalOmset]);
       excelData.push(["Total Pengeluaran Operasional", totalExpense]);
-      excelData.push(["LABA BERSIH HARIAN", netProfit]);
+      excelData.push(["LABA BERSIH BULANAN", netProfit]);
 
       const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Rekap Harian");
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan");
 
-      const fileName = `Rekap_Lengkap_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Rekap_Bulanan_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
