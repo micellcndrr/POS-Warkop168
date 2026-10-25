@@ -282,8 +282,8 @@
     }
 
     .qris-img-preview {
-      width: 340px;
-      height: 340px;
+      width: 320px;
+      height: 320px;
       border: 2px solid #0f172a;
       border-radius: 10px;
       object-fit: contain;
@@ -328,12 +328,11 @@
         <button class="btn-admin-login" onclick="loginAdmin()">🔑 Dashboard Owner</button>
       </div>
       
-      <!-- Kolom Pencarian Menu -->
       <div class="search-box">
-        <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu di sini..." oninput="renderMenuFilter()" style="margin:0;">
+        <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu..." oninput="renderMenuFilter()" style="margin:0;">
       </div>
 
-      <!-- Kategori Tombol Filter Lengkap -->
+      <!-- Kategori Filter -->
       <div class="categories">
         <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
         <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
@@ -347,12 +346,13 @@
         <button class="cat-btn" onclick="filterCategory('coklat')">Coklat</button>
         <button class="cat-btn" onclick="filterCategory('soda')">Soda</button>
         <button class="cat-btn" onclick="filterCategory('nutrisari')">Nutrisari</button>
+        <button class="cat-btn" onclick="filterCategory('susu')">Susu</button>
       </div>
 
       <div class="grid-menu" id="menuGrid"></div>
     </div>
 
-    <!-- Panel Right Cart (Akses Karyawan) -->
+    <!-- Panel Right Cart -->
     <div class="cart-panel">
       <h2 class="cart-title">Pesanan</h2>
       
@@ -374,7 +374,7 @@
     </div>
   </div>
 
-  <!-- Modal Pilih Metode Pembayaran -->
+  <!-- Modal Pembayaran -->
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 520px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -438,7 +438,7 @@
     </div>
   </div>
 
-  <!-- Modal Catatan Pengeluaran Harian -->
+  <!-- Modal Pengeluaran -->
   <div id="expenseModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -447,7 +447,7 @@
       </div>
 
       <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addExpense(event)">
-        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan (contoh: Beli Es Batu, Gas)" required style="margin:0;">
+        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan" required style="margin:0;">
         <input type="number" id="expenseAmount" class="input-field" placeholder="Nominal (Rp)" required style="margin:0;">
         <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Catat</button>
       </form>
@@ -472,7 +472,7 @@
     </div>
   </div>
 
-  <!-- Modal Laporan Penjualan & Tutup Buku Bulanan -->
+  <!-- Modal Laporan Penjualan & Tutup Buku -->
   <div id="historyModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -516,7 +516,7 @@
     </div>
   </div>
 
-  <!-- Modal Dashboard Admin / Owner -->
+  <!-- Modal Admin Dashboard -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 800px; height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
@@ -524,18 +524,18 @@
         <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout Admin</button>
       </div>
 
-      <!-- Fitur Admin 1: Input Barang Masuk (Restok) -->
+      <!-- Input Barang Masuk -->
       <div style="margin-top:12px; background:#fef3c7; padding:12px; border-radius:8px; border:1px solid #fde68a;">
         <h4 style="margin-bottom:8px; color:#92400e;">📥 Input Barang Masuk (Restok)</h4>
         <form style="display:grid; grid-template-columns: 2fr 1fr 2fr auto; gap:8px;" onsubmit="submitRestock(event)">
           <select id="restockProductSelect" class="input-field" style="margin:0;" required></select>
           <input type="number" id="restockQtyInput" class="input-field" placeholder="+Qty" min="1" required style="margin:0;">
-          <input type="text" id="restockNoteInput" class="input-field" placeholder="Keterangan (Supplier/Sumber)" required style="margin:0;">
+          <input type="text" id="restockNoteInput" class="input-field" placeholder="Keterangan" required style="margin:0;">
           <button type="submit" style="background:#d97706; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Restok</button>
         </form>
       </div>
 
-      <!-- Fitur Admin 2: Tambah Menu Baru -->
+      <!-- Tambah Menu Baru -->
       <div style="margin-top:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
         <h4 style="margin-bottom:8px;">+ Buat Menu Baru</h4>
         <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px;" onsubmit="addNewProduct(event)">
@@ -553,20 +553,21 @@
             <option value="coklat">Coklat</option>
             <option value="soda">Soda</option>
             <option value="nutrisari">Nutrisari</option>
+            <option value="susu">Susu</option>
           </select>
           <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
           <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
         </form>
       </div>
 
-      <!-- Fitur Admin 3: Setting QRIS Link -->
+      <!-- QRIS Link -->
       <div style="margin-top:12px; background:#f0f9ff; padding:10px; border-radius:8px; border:1px solid #bae6fd; display:flex; gap:8px; align-items:center;">
-        <span style="font-size:13px; font-weight:600; white-space:nowrap;">Link URL Gambar QRIS:</span>
-        <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS di sini" style="margin:0; font-size:12px;">
+        <span style="font-size:13px; font-weight:600; white-space:nowrap;">Link URL QRIS:</span>
+        <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS" style="margin:0; font-size:12px;">
         <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; white-space:nowrap;">Simpan QRIS</button>
       </div>
 
-      <!-- Fitur Admin 4: Kelola Harga & Penyesuaian Stok -->
+      <!-- Kelola Stok -->
       <div style="overflow-y:auto; flex:1; margin-top:12px;">
         <h4 style="margin-bottom:8px;">Kelola Harga, Stok & Hapus Menu</h4>
         <table class="custom-table">
@@ -583,7 +584,6 @@
         </table>
       </div>
 
-      <!-- Fitur Admin 5: Download Rekap & Audit Log -->
       <div style="margin-top:12px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
         <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📋 Audit Log Restok</button>
         <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📥 Download Rekap Excel Bulanan</button>
@@ -591,7 +591,7 @@
     </div>
   </div>
 
-  <!-- Modal Log Audit Restok -->
+  <!-- Modal Log Audit -->
   <div id="restockLogModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -634,7 +634,9 @@
       { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25 },
       { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35 },
       { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30 },
-      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25 }
+      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25 },
+      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30 },
+      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20 }
     ];
 
     let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
@@ -795,7 +797,7 @@
         qrisImg.src = savedQrisUrl;
       } else {
         const qrData = `00020101021126580014ID.CO.WARKOP.WWW0118936009143000000000520458125303360540${total}5802ID5912WARKOP_KASIR6007JAKARTA6304`;
-        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(qrData)}`;
+        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrData)}`;
       }
 
       document.getElementById('paymentModal').style.display = 'flex';
