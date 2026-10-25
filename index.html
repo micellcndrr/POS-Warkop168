@@ -66,19 +66,19 @@
 
     .categories {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
 
     .cat-btn {
-      padding: 8px 16px;
+      padding: 8px 14px;
       border: 1px solid #cbd5e1;
       border-radius: 20px;
       background: #ffffff;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       transition: all 0.2s;
     }
 
@@ -333,13 +333,20 @@
         <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu di sini..." oninput="renderMenuFilter()" style="margin:0;">
       </div>
 
-      <!-- Kategori Tombol Filter -->
+      <!-- Kategori Tombol Filter Lengkap -->
       <div class="categories">
         <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
         <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
         <button class="cat-btn" onclick="filterCategory('minuman')">Minuman</button>
+        <button class="cat-btn" onclick="filterCategory('rice bowl')">Rice Bowl</button>
         <button class="cat-btn" onclick="filterCategory('roti bakar')">Roti Bakar</button>
         <button class="cat-btn" onclick="filterCategory('pisang bakar')">Pisang Bakar</button>
+        <button class="cat-btn" onclick="filterCategory('cemilan')">Cemilan</button>
+        <button class="cat-btn" onclick="filterCategory('kopi')">Kopi</button>
+        <button class="cat-btn" onclick="filterCategory('malaka')">Malaka</button>
+        <button class="cat-btn" onclick="filterCategory('coklat')">Coklat</button>
+        <button class="cat-btn" onclick="filterCategory('soda')">Soda</button>
+        <button class="cat-btn" onclick="filterCategory('nutrisari')">Nutrisari</button>
       </div>
 
       <div class="grid-menu" id="menuGrid"></div>
@@ -537,8 +544,15 @@
           <select id="newCategory" class="input-field" style="margin:0;">
             <option value="makanan">Makanan</option>
             <option value="minuman">Minuman</option>
+            <option value="rice bowl">Rice Bowl</option>
             <option value="roti bakar">Roti Bakar</option>
             <option value="pisang bakar">Pisang Bakar</option>
+            <option value="cemilan">Cemilan</option>
+            <option value="kopi">Kopi</option>
+            <option value="malaka">Malaka</option>
+            <option value="coklat">Coklat</option>
+            <option value="soda">Soda</option>
+            <option value="nutrisari">Nutrisari</option>
           </select>
           <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
           <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
@@ -606,14 +620,21 @@
       { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20 },
       { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15 },
       { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30 },
-      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'minuman', stock: 50 },
-      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'minuman', stock: 40 },
+      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50 },
+      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40 },
       { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60 },
-      { id: 7, name: 'Nutrisari Dingin', price: 5000, category: 'minuman', stock: 25 },
+      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25 },
       { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20 },
       { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15 },
       { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20 },
-      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15 }
+      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15 },
+      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25 },
+      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20 },
+      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30 },
+      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25 },
+      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35 },
+      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30 },
+      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25 }
     ];
 
     let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
