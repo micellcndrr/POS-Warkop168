@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Owner - Rekap Penjualan</title>
+  <!-- Library SheetJS untuk Export Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 22px;
+    }
+
+    .btn-export {
+      background: #15803d;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .card h3 {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .card .amount {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .card.omset .amount { color: #16a34a; }
+    .card.pengeluaran .amount { color: #dc2626; }
+    .card.laba .amount { color: #2563eb; }
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    .table-container {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .custom-table th, .custom-table td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .custom-table th {
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    /* Modal Protection */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 320px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .btn-login {
+      background: #0f172a;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Modal Kunci PIN Owner -->
+  <div id="pinModal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>🔑 Akses Owner</h2>
+      <p style="font-size:13px; color:#64748b; margin-top:5px;">Masukkan PIN Admin untuk melihat laporan</p>
+      <input type="password" id="pinInput" class="input-field" placeholder="Masukkan PIN" maxlength="10">
+      <button class="btn-login" onclick="verifyPin()">Masuk Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Content Dashboard -->
+  <div id="dashboardContent" style="display:none;">
+    <div class="header">
+      <div>
+        <h1>👑 Dashboard Pantau Owner</h1>
+        <p style="font-size:13px; color:#64748b;">Monitoring Penjualan & Keuangan Warkop Real-time</p>
+      </div>
+      <button class="btn-export" onclick="exportMonthlyRecapExcel()">📥 Download Rekap Excel</button>
+    </div>
+
+    <!-- Card Ringkasan -->
+    <div class="summary-grid">
+      <div class="card omset">
+        <h3>Total Omset Penjualan</h3>
+        <div class="amount" id="totalOmset">Rp 0</div>
+      </div>
+      <div class="card pengeluaran">
+        <h3>Total Pengeluaran</h3>
+        <div class="amount" id="totalPengeluaran">Rp 0</div>
+      </div>
+      <div class="card laba">
+        <h3>Laba Bersih</h3>
+        <div class="amount" id="totalLaba">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- Tabel Riwayat Penjualan -->
+    <h2 class="section-title">📜 Laporan Transaksi Penjualan</h2>
+    <div class="table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Menu</th>
+            <th>Qty</th>
+            <th>Metode Pembayaran</th>
+            <th>Total Penjualan</th>
+          </tr>
+        </thead>
+        <tbody id="salesTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Tabel Catatan Pengeluaran -->
+    <h2 class="section-title">💸 Catatan Pengeluaran Harian</h2>
+    <div class="table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Keterangan Pengeluaran</th>
+            <th>Nominal</th>
+          </tr>
+        </thead>
+        <tbody id="expenseTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Tabel Audit Restok -->
+    <h2 class="section-title">📋 Audit Log Barang Masuk (Restok)</h2>
+    <div class="table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Nama Menu</th>
+            <th>Tambahan Stok</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody id="restockTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const adminPin = '4M112208';
+
+    function verifyPin() {
+      const input = document.getElementById('pinInput').value;
+      if (input === adminPin) {
+        document.getElementById('pinModal').style.display = 'none';
+        document.getElementById('dashboardContent').style.display = 'block';
+        loadDashboardData();
+      } else {
+        alert('PIN Admin Salah!');
+        document.getElementById('pinInput').value = '';
+      }
+    }
+
+    function loadDashboardData() {
+      const transactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
+      const expenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
+      const restocks = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
+
+      let totalOmset = 0;
+      let totalPengeluaran = 0;
+
+      // Render Sales Table
+      const salesBody = document.getElementById('salesTableBody');
+      salesBody.innerHTML = '';
+      if (transactions.length === 0) {
+        salesBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi penjualan</td></tr>';
+      } else {
+        transactions.forEach(tx => {
+          totalOmset += tx.Total;
+          salesBody.innerHTML += `
+            <tr>
+              <td>${tx.Tanggal}</td>
+              <td><strong>${tx.Menu}</strong></td>
+              <td>${tx.Qty}</td>
+              <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
+              <td>Rp ${tx.Total.toLocaleString('id-ID')}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Render Expense Table
+      const expenseBody = document.getElementById('expenseTableBody');
+      expenseBody.innerHTML = '';
+      if (expenses.length === 0) {
+        expenseBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada catatan pengeluaran</td></tr>';
+      } else {
+        expenses.forEach(exp => {
+          totalPengeluaran += exp.Nominal;
+          expenseBody.innerHTML += `
+            <tr>
+              <td>${exp.Tanggal}</td>
+              <td>${exp.Nama}</td>
+              <td>Rp ${exp.Nominal.toLocaleString('id-ID')}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Render Restock Table
+      const restockBody = document.getElementById('restockTableBody');
+      restockBody.innerHTML = '';
+      if (restocks.length === 0) {
+        restockBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada log barang masuk</td></tr>';
+      } else {
+        restocks.forEach(log => {
+          restockBody.innerHTML += `
+            <tr>
+              <td>${log.Waktu}</td>
+              <td><strong>${log.Menu}</strong></td>
+              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
+              <td>${log.Keterangan}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Render Summary Cards
+      const labaBersih = totalOmset - totalPengeluaran;
+      document.getElementById('totalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
+      document.getElementById('totalPengeluaran').innerText = 'Rp ' + totalPengeluaran.toLocaleString('id-ID');
+      document.getElementById('totalLaba').innerText = 'Rp ' + labaBersih.toLocaleString('id-ID');
+    }
+
+    function exportMonthlyRecapExcel() {
+      const transactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
+      const expenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
+      const restocks = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
+
+      if (transactions.length === 0 && expenses.length === 0) {
+        alert('Belum ada data untuk di-download!');
+        return;
+      }
+
+      const menuSummary = {};
+      let totalOmset = 0;
+
+      transactions.forEach(tx => {
+        if (!menuSummary[tx.Menu]) {
+          menuSummary[tx.Menu] = { Kategori: tx.Kategori, Harga: tx.Harga, Qty: 0, Total: 0 };
+        }
+        menuSummary[tx.Menu].Qty += tx.Qty;
+        menuSummary[tx.Menu].Total += tx.Total;
+        totalOmset += tx.Total;
+      });
+
+      const totalExpense = expenses.reduce((sum, e) => sum + e.Nominal, 0);
+      const netProfit = totalOmset - totalExpense;
+
+      const excelData = [
+        ["LAPORAN REKAP OWNER WARKOP"],
+        ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
+        [""],
+        ["--- RINGKASAN PENJUALAN ---"],
+        ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
+      ];
+
+      let no = 1;
+      for (const [menuName, val] of Object.entries(menuSummary)) {
+        excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
+      }
+      excelData.push(["", "TOTAL OMSET PENJUALAN", "", "", "", totalOmset]);
+      excelData.push([""]);
+
+      excelData.push(["--- RINGKASAN PENGELUARAN ---"]);
+      excelData.push(["No", "Tanggal", "Keterangan Pengeluaran", "", "", "Nominal"]);
+      
+      let noExp = 1;
+      expenses.forEach(exp => {
+        excelData.push([noExp++, exp.Tanggal, exp.Nama, "", "", exp.Nominal]);
+      });
+      excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
+      excelData.push([""]);
+
+      excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
+      excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
+
+      restocks.forEach(log => {
+        excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
+      });
+      excelData.push([""]);
+
+      excelData.push(["--- RINGKASAN LABA RUGI ---"]);
+      excelData.push(["Total Omset Penjualan", totalOmset]);
+      excelData.push(["Total Pengeluaran Operasional", totalExpense]);
+      excelData.push(["LABA BERSIH", netProfit]);
+
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan Owner");
+
+      const fileName = `Laporan_Owner_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    }
+  </script>
+</body>
+</html>
