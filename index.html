@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Warkop - Lengkap dengan Metode Pembayaran</title>
+  <title>Kasir Warkop - POS Lengkap</title>
   <!-- Library SheetJS untuk Export Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -41,6 +41,10 @@
       font-weight: 700;
       margin-bottom: 15px;
       color: #0f172a;
+    }
+
+    .search-box {
+      margin-bottom: 15px;
     }
 
     .categories {
@@ -226,7 +230,6 @@
       flex-direction: column;
     }
 
-    /* Tab Metode Pembayaran */
     .payment-tabs {
       display: flex;
       gap: 8px;
@@ -262,7 +265,6 @@
       display: block;
     }
 
-    /* Tampilan Gambar QRIS Diperbesar */
     .qris-img-preview {
       width: 340px;
       height: 340px;
@@ -307,6 +309,11 @@
     <div class="menu-panel">
       <h1 class="header-title">Kasir Warkop</h1>
       
+      <!-- Kolom Pencarian Menu -->
+      <div class="search-box">
+        <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu di sini..." oninput="renderMenuFilter()" style="margin:0;">
+      </div>
+
       <div class="categories">
         <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
         <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
@@ -340,7 +347,7 @@
     </div>
   </div>
 
-  <!-- Modal Pilih Metode Pembayaran (Lebar diperbesar ke 520px) -->
+  <!-- Modal Pilih Metode Pembayaran -->
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 520px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -348,7 +355,6 @@
         <button onclick="closePaymentModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
-      <!-- Tab Opsi Metode -->
       <div class="payment-tabs">
         <button class="pay-tab-btn active" onclick="switchPayTab('tunai')">💵 Tunai</button>
         <button class="pay-tab-btn" onclick="switchPayTab('qris')">📱 QRIS</button>
@@ -356,7 +362,6 @@
         <button class="pay-tab-btn" onclick="switchPayTab('debit')">💳 Debit</button>
       </div>
 
-      <!-- Tab Content: Tunai -->
       <div id="tabTunai" class="pay-tab-content active">
         <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Uang Tunai Diterima (Rp):</label>
         <input type="number" id="cashAmountInput" class="input-field" placeholder="Masukkan nominal uang" oninput="calcCashChange()">
@@ -371,7 +376,6 @@
         </button>
       </div>
 
-      <!-- Tab Content: QRIS -->
       <div id="tabQris" class="pay-tab-content">
         <p style="text-align:center; font-size:13px; color:#64748b;">Scan QRIS di bawah untuk menyelesaikan pembayaran:</p>
         <img id="qrisDisplayImg" class="qris-img-preview" src="" alt="Gambar QRIS Warkop">
@@ -386,7 +390,6 @@
         </button>
       </div>
 
-      <!-- Tab Content: Transfer -->
       <div id="tabTransfer" class="pay-tab-content">
         <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Pilih Bank / e-Wallet:</label>
         <select id="transferBankSelect" class="input-field">
@@ -402,7 +405,6 @@
         </button>
       </div>
 
-      <!-- Tab Content: Debit -->
       <div id="tabDebit" class="pay-tab-content">
         <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Nomor Reff / Kartu (Opsional):</label>
         <input type="text" id="debitRefInput" class="input-field" placeholder="4 digit terakhir kartu atau no reff EDC">
@@ -554,6 +556,11 @@
     function renderMenu(items) {
       const grid = document.getElementById('menuGrid');
       grid.innerHTML = '';
+      if (items.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 20px;">Menu tidak ditemukan</p>';
+        return;
+      }
+
       items.forEach(item => {
         let badgeClass = 'normal';
         let badgeText = `Stok: ${item.stock}`;
@@ -586,11 +593,16 @@
     }
 
     function renderMenuFilter() {
-      if (currentCategory === 'semua') {
-        renderMenu(products);
-      } else {
-        renderMenu(products.filter(p => p.category === currentCategory));
+      const searchQuery = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
+      
+      let filtered = products;
+      if (currentCategory !== 'semua') {
+        filtered = filtered.filter(p => p.category === currentCategory);
       }
+      if (searchQuery) {
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery));
+      }
+      renderMenu(filtered);
     }
 
     function addToCart(id) {
