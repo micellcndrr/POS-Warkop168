@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Warkop - POS Lengkap</title>
+  <title>Kasir Warkop - POS & Audit Log Restok</title>
   <!-- Library SheetJS untuk Export Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
@@ -28,7 +28,7 @@
       height: 100%;
     }
 
-    /* Panel Kiri: Menu */
+    /* Panel Kiri: Menu Kasir */
     .menu-panel {
       flex: 2;
       padding: 20px;
@@ -36,11 +36,28 @@
       border-right: 1px solid #e2e8f0;
     }
 
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
     .header-title {
       font-size: 24px;
       font-weight: 700;
-      margin-bottom: 15px;
       color: #0f172a;
+    }
+
+    .btn-admin-login {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .search-box {
@@ -202,10 +219,9 @@
     }
 
     .btn-pay-main { background: #16a34a; color: #fff; font-size: 16px; padding: 14px; }
+    .btn-restock-karyawan { background: #d97706; color: #fff; }
+    .btn-log-restock { background: #475569; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
-    .btn-stock { background: #d97706; color: #fff; }
-    .btn-history { background: #0284c7; color: #fff; }
-    .btn-excel { background: #15803d; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
     /* Modals Overlay */
@@ -307,7 +323,10 @@
   <div class="container">
     <!-- Panel Left Menu -->
     <div class="menu-panel">
-      <h1 class="header-title">Kasir Warkop</h1>
+      <div class="top-header">
+        <h1 class="header-title">Kasir Warkop</h1>
+        <button class="btn-admin-login" onclick="loginAdmin()">🔑 Dashboard Owner / Admin</button>
+      </div>
       
       <!-- Kolom Pencarian Menu -->
       <div class="search-box">
@@ -338,11 +357,110 @@
         </div>
 
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Pilih Metode Pembayaran</button>
-        <button class="btn-action btn-expense" onclick="protectedAccess(openExpenseModal)">🔒 💸 Catat Pengeluaran Harian</button>
-        <button class="btn-action btn-stock" onclick="protectedAccess(openStockModal)">🔒 📦 Kelola Stok & Menu</button>
-        <button class="btn-action btn-history" onclick="protectedAccess(openHistoryModal)">🔒 📜 Laporan Laba Rugi / Riwayat</button>
-        <button class="btn-action btn-excel" onclick="protectedAccess(exportDailyRecapExcel)">🔒 📥 Download Rekap Excel</button>
+        <button class="btn-action btn-restock-karyawan" onclick="openAddStockModal()">📥 Input Barang Masuk (Restok)</button>
+        <button class="btn-action btn-log-restock" onclick="openRestockLogModal()">📋 Lihat Log Barang Masuk</button>
+        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catat Pengeluaran Harian</button>
         <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Input Restok / Barang Masuk Karyawan (+Qty dengan Catatan Log) -->
+  <div id="addStockModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>📥 Catat Penambahan Barang Masuk</h3>
+        <button onclick="closeAddStockModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <form onsubmit="submitRestock(event)">
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Pilih Menu / Bahan:</label>
+        <select id="restockProductSelect" class="input-field" required></select>
+
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Jumlah Ditambahkan (Pcs/Porsi):</label>
+        <input type="number" id="restockQtyInput" class="input-field" min="1" placeholder="Contoh: 24" required>
+
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Keterangan / Sumber (Wajib):</label>
+        <input type="text" id="restockNoteInput" class="input-field" placeholder="Contoh: Belanja Agen, Titipan Supplier" required>
+
+        <button type="submit" style="background:#d97706; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; margin-top:10px;">
+          + Simpan Penambahan Stok & Catat Log
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Log Audit Riwayat Barang Masuk -->
+  <div id="restockLogModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>📋 Log Riwayat Barang Masuk</h3>
+        <button onclick="closeRestockLogModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Tanggal & Waktu</th>
+              <th>Nama Menu</th>
+              <th>Tambahan Stok</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="restockLogTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Dashboard Admin Khusus Owner (Perlu PIN) -->
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 750px; height: 90vh;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
+        <h3>🔑 Dashboard Khusus Owner</h3>
+        <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout Admin</button>
+      </div>
+
+      <!-- Fitur Admin 1: Tambah Menu Baru -->
+      <div style="margin-top:15px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+        <h4 style="margin-bottom:8px;">+ Buat Menu Baru</h4>
+        <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px;" onsubmit="addNewProduct(event)">
+          <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
+          <input type="number" id="newPrice" class="input-field" placeholder="Harga" required style="margin:0;">
+          <select id="newCategory" class="input-field" style="margin:0;">
+            <option value="makanan">Makanan</option>
+            <option value="minuman">Minuman</option>
+          </select>
+          <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
+          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
+        </form>
+      </div>
+
+      <!-- Fitur Admin 2: Ubah Harga & Hapus Menu -->
+      <div style="overflow-y:auto; flex:1; margin-top:15px;">
+        <h4 style="margin-bottom:8px;">Kelola Harga & Menu</h4>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Nama Menu</th>
+              <th>Kategori</th>
+              <th>Harga (Rp)</th>
+              <th>Stok Saat Ini</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="adminStockTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Fitur Admin 3: Laporan Keuangan & Reset Buku -->
+      <div style="margin-top:15px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <button onclick="openHistoryModal()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📜 Laporan Laba Rugi Hari Ini</button>
+          <button onclick="exportDailyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px; margin-left:5px;">📥 Download Excel</button>
+        </div>
+        <button onclick="resetDailyData()" style="background:#ef4444; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">⚠️ Tutup Buku Hari Ini</button>
       </div>
     </div>
   </div>
@@ -450,42 +568,6 @@
     </div>
   </div>
 
-  <!-- Modal Kelola Stok & Menu -->
-  <div id="stockModal" class="modal-overlay">
-    <div class="modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>Manajemen Stok & Menu Warkop</h3>
-        <button onclick="closeStockModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addNewProduct(event)">
-        <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
-        <input type="number" id="newPrice" class="input-field" placeholder="Harga" required style="margin:0;">
-        <select id="newCategory" class="input-field" style="margin:0;">
-          <option value="makanan">Makanan</option>
-          <option value="minuman">Minuman</option>
-        </select>
-        <input type="number" id="newStock" class="input-field" placeholder="Stok" required style="margin:0;">
-        <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Tambah</button>
-      </form>
-
-      <div style="overflow-y:auto; flex:1;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Nama Menu</th>
-              <th>Kategori</th>
-              <th>Harga</th>
-              <th>Stok Saat Ini</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="stockTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Riwayat Transaksi & Laba Rugi -->
   <div id="historyModal" class="modal-overlay">
     <div class="modal-content">
@@ -522,10 +604,6 @@
           <span>Laba Bersih:</span>
           <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
         </div>
-        
-        <div style="display:flex; justify-content:flex-end;">
-          <button onclick="resetDailyData()" style="background:#ef4444; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Reset / Tutup Buku Hari Ini</button>
-        </div>
       </div>
     </div>
   </div>
@@ -545,19 +623,26 @@
     let cart = [];
     let dailyTransactions = JSON.parse(localStorage.getItem('warkop_daily_tx')) || [];
     let dailyExpenses = JSON.parse(localStorage.getItem('warkop_daily_exp')) || [];
+    let restockLogs = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
 
-    /* PIN ADMIN TUNGGAL (Terkunci untuk semua device) */
+    /* PIN ADMIN KHUSUS OWNER */
     const adminPin = '4M112208';
 
-    function protectedAccess(callback) {
-      const inputPin = prompt('Masukkan PIN Admin untuk mengakses fitur ini:');
+    function loginAdmin() {
+      const inputPin = prompt('Masukkan PIN Owner / Admin:');
       if (inputPin === adminPin) {
-        callback();
+        renderAdminStockTable();
+        document.getElementById('adminModal').style.display = 'flex';
       } else if (inputPin !== null) {
         alert('PIN Admin Salah! Akses Ditolak.');
       }
+    }
+
+    function logoutAdmin() {
+      document.getElementById('adminModal').style.display = 'none';
+      alert('Sesi Admin Dikunci Kembali.');
     }
 
     function saveProducts() {
@@ -675,6 +760,151 @@
 
       const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    /* Modal Restok versi Karyawan (+Qty + Log) */
+    function openAddStockModal() {
+      const select = document.getElementById('restockProductSelect');
+      select.innerHTML = '';
+      products.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.name} (Stok Saat Ini: ${p.stock})</option>`;
+      });
+
+      document.getElementById('restockQtyInput').value = '';
+      document.getElementById('restockNoteInput').value = '';
+      document.getElementById('addStockModal').style.display = 'flex';
+    }
+
+    function closeAddStockModal() {
+      document.getElementById('addStockModal').style.display = 'none';
+    }
+
+    function submitRestock(e) {
+      e.preventDefault();
+      const prodId = parseInt(document.getElementById('restockProductSelect').value);
+      const qtyAdd = parseInt(document.getElementById('restockQtyInput').value);
+      const note = document.getElementById('restockNoteInput').value.trim();
+
+      if (isNaN(qtyAdd) || qtyAdd <= 0 || !note) {
+        alert('Mohon isi jumlah penambahan stok dan keterangan!');
+        return;
+      }
+
+      const product = products.find(p => p.id === prodId);
+      if (product) {
+        product.stock += qtyAdd;
+        saveProducts();
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        restockLogs.unshift({
+          Waktu: dateStr,
+          Menu: product.name,
+          QtyTambahan: qtyAdd,
+          Keterangan: note
+        });
+
+        localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
+        alert(`Stok ${product.name} berhasil ditambah +${qtyAdd}! Log tercatat.`);
+        closeAddStockModal();
+      }
+    }
+
+    /* Modal Log Audit Restok */
+    function openRestockLogModal() {
+      const tbody = document.getElementById('restockLogTableBody');
+      tbody.innerHTML = '';
+
+      if (restockLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat penambahan stok</td></tr>';
+      } else {
+        restockLogs.forEach(log => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${log.Waktu}</td>
+              <td><strong>${log.Menu}</strong></td>
+              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
+              <td>${log.Keterangan}</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('restockLogModal').style.display = 'flex';
+    }
+
+    function closeRestockLogModal() {
+      document.getElementById('restockLogModal').style.display = 'none';
+    }
+
+    /* Kelola Menu versi Admin (Owner Only) */
+    function renderAdminStockTable() {
+      const tbody = document.getElementById('adminStockTableBody');
+      tbody.innerHTML = '';
+      products.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td style="text-transform:capitalize;">${p.category}</td>
+            <td>
+              <input type="number" style="width:90px; padding:4px;" value="${p.price}" onchange="updatePriceDirect(${p.id}, this.value)">
+            </td>
+            <td>
+              <input type="number" style="width:70px; padding:4px; text-align:center;" value="${p.stock}" onchange="updateStockDirect(${p.id}, this.value)">
+            </td>
+            <td>
+              <button onclick="deleteProduct(${p.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function updateStockDirect(id, newStockVal) {
+      const val = parseInt(newStockVal);
+      if (isNaN(val) || val < 0) return;
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.stock = val;
+        saveProducts();
+      }
+    }
+
+    function updatePriceDirect(id, newPriceVal) {
+      const val = parseFloat(newPriceVal);
+      if (isNaN(val) || val < 0) return;
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.price = val;
+        saveProducts();
+      }
+    }
+
+    function addNewProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('newName').value.trim();
+      const price = parseFloat(document.getElementById('newPrice').value);
+      const category = document.getElementById('newCategory').value;
+      const stock = parseInt(document.getElementById('newStock').value);
+
+      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      products.push({ id: newId, name, price, category, stock });
+      
+      saveProducts();
+      renderAdminStockTable();
+
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newStock').value = '';
+    }
+
+    function deleteProduct(id) {
+      if (confirm('Yakin ingin menghapus menu ini?')) {
+        products = products.filter(p => p.id !== id);
+        saveProducts();
+        renderAdminStockTable();
+      }
     }
 
     /* Modal Metode Pembayaran */
@@ -881,73 +1111,7 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
-    /* Modal Stok */
-    function openStockModal() {
-      renderStockTable();
-      document.getElementById('stockModal').style.display = 'flex';
-    }
-
-    function closeStockModal() {
-      document.getElementById('stockModal').style.display = 'none';
-    }
-
-    function renderStockTable() {
-      const tbody = document.getElementById('stockTableBody');
-      tbody.innerHTML = '';
-      products.forEach(p => {
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${p.name}</strong></td>
-            <td style="text-transform:capitalize;">${p.category}</td>
-            <td>Rp ${p.price.toLocaleString('id-ID')}</td>
-            <td>
-              <input type="number" style="width:70px; padding:4px; text-align:center;" value="${p.stock}" onchange="updateStockDirect(${p.id}, this.value)">
-            </td>
-            <td>
-              <button onclick="deleteProduct(${p.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function updateStockDirect(id, newStockVal) {
-      const val = parseInt(newStockVal);
-      if (isNaN(val) || val < 0) return;
-      const product = products.find(p => p.id === id);
-      if (product) {
-        product.stock = val;
-        saveProducts();
-      }
-    }
-
-    function addNewProduct(e) {
-      e.preventDefault();
-      const name = document.getElementById('newName').value.trim();
-      const price = parseFloat(document.getElementById('newPrice').value);
-      const category = document.getElementById('newCategory').value;
-      const stock = parseInt(document.getElementById('newStock').value);
-
-      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({ id: newId, name, price, category, stock });
-      
-      saveProducts();
-      renderStockTable();
-
-      document.getElementById('newName').value = '';
-      document.getElementById('newPrice').value = '';
-      document.getElementById('newStock').value = '';
-    }
-
-    function deleteProduct(id) {
-      if (confirm('Yakin ingin menghapus menu ini?')) {
-        products = products.filter(p => p.id !== id);
-        saveProducts();
-        renderStockTable();
-      }
-    }
-
-    /* Modal Riwayat */
+    /* Modal Riwayat & Laba Rugi */
     function openHistoryModal() {
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '';
@@ -1040,6 +1204,14 @@
         excelData.push([noExp++, exp.Waktu, exp.Nama, "", "", exp.Nominal]);
       });
       excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
+      excelData.push([""]);
+
+      excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
+      excelData.push(["Waktu", "Nama Menu", "Tambahan Stok", "Keterangan"]);
+
+      restockLogs.forEach(log => {
+        excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
+      });
       excelData.push([""]);
 
       excelData.push(["--- RINGKASAN LABA RUGI ---"]);
