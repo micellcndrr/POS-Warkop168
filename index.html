@@ -68,6 +68,7 @@
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
     }
 
     .cat-btn {
@@ -332,10 +333,13 @@
         <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu di sini..." oninput="renderMenuFilter()" style="margin:0;">
       </div>
 
+      <!-- Kategori Tombol Filter -->
       <div class="categories">
         <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
         <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
         <button class="cat-btn" onclick="filterCategory('minuman')">Minuman</button>
+        <button class="cat-btn" onclick="filterCategory('roti bakar')">Roti Bakar</button>
+        <button class="cat-btn" onclick="filterCategory('pisang bakar')">Pisang Bakar</button>
       </div>
 
       <div class="grid-menu" id="menuGrid"></div>
@@ -355,7 +359,6 @@
           <span id="totalPrice">Rp 0</span>
         </div>
 
-        <!-- FITUR UTAMA KARYAWAN -->
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Metode Pembayaran</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran Harian</button>
         <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Penjualan & Tutup Buku Bulanan</button>
@@ -364,7 +367,7 @@
     </div>
   </div>
 
-  <!-- Modal Pilih Metode Pembayaran (Akses Karyawan) -->
+  <!-- Modal Pilih Metode Pembayaran -->
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 520px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -428,7 +431,7 @@
     </div>
   </div>
 
-  <!-- Modal Catatan Pengeluaran Harian (Akses Karyawan) -->
+  <!-- Modal Catatan Pengeluaran Harian -->
   <div id="expenseModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -462,7 +465,7 @@
     </div>
   </div>
 
-  <!-- Modal Laporan Penjualan & Tutup Buku Bulanan (Akses Karyawan) -->
+  <!-- Modal Laporan Penjualan & Tutup Buku Bulanan -->
   <div id="historyModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -506,7 +509,7 @@
     </div>
   </div>
 
-  <!-- Modal Dashboard Admin / Owner (HANYA BISA DIAKSES DENGAN PIN 4M112208) -->
+  <!-- Modal Dashboard Admin / Owner -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 800px; height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
@@ -534,6 +537,8 @@
           <select id="newCategory" class="input-field" style="margin:0;">
             <option value="makanan">Makanan</option>
             <option value="minuman">Minuman</option>
+            <option value="roti bakar">Roti Bakar</option>
+            <option value="pisang bakar">Pisang Bakar</option>
           </select>
           <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
           <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
@@ -572,7 +577,7 @@
     </div>
   </div>
 
-  <!-- Modal Log Audit Restok (Khusus Admin) -->
+  <!-- Modal Log Audit Restok -->
   <div id="restockLogModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -604,7 +609,11 @@
       { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'minuman', stock: 50 },
       { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'minuman', stock: 40 },
       { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60 },
-      { id: 7, name: 'Nutrisari Dingin', price: 5000, category: 'minuman', stock: 25 }
+      { id: 7, name: 'Nutrisari Dingin', price: 5000, category: 'minuman', stock: 25 },
+      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20 },
+      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15 },
+      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20 },
+      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15 }
     ];
 
     let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
@@ -615,7 +624,6 @@
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
 
-    /* PIN ADMIN TERKUNCI KHUSUS OWNER */
     const adminPin = '4M112208';
 
     function loginAdmin() {
@@ -684,7 +692,7 @@
       
       let filtered = products;
       if (currentCategory !== 'semua') {
-        filtered = filtered.filter(p => p.category === currentCategory);
+        filtered = filtered.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
       }
       if (searchQuery) {
         filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery));
@@ -752,7 +760,6 @@
       document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
-    /* Modal Metode Pembayaran (Fitur Karyawan) */
     function openPaymentModal() {
       if (cart.length === 0) {
         alert('Keranjang masih kosong!');
@@ -884,7 +891,6 @@
       updateCart();
     }
 
-    /* Modal Catatan Pengeluaran Harian (Fitur Karyawan) */
     function openExpenseModal() {
       renderExpenseTable();
       document.getElementById('expenseModal').style.display = 'flex';
@@ -949,7 +955,6 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
-    /* Modal Laporan Penjualan & Tutup Buku Bulanan (Fitur Karyawan) */
     function openHistoryModal() {
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '';
@@ -997,7 +1002,6 @@
       }
     }
 
-    /* Fungsi Khusus Owner/Admin (Perlu PIN) */
     function populateRestockSelect() {
       const select = document.getElementById('restockProductSelect');
       select.innerHTML = '';
