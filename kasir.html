@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasir Warkop - Lengkap dengan Metode Pembayaran</title>
+  <!-- Library SheetJS untuk Export Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Panel Kiri: Menu */
+    .menu-panel {
+      flex: 2;
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #0f172a;
+    }
+
+    .categories {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .cat-btn {
+      padding: 8px 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      background: #ffffff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .cat-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .grid-menu {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 15px;
+    }
+
+    .card-item {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      transition: transform 0.1s, border-color 0.2s;
+    }
+
+    .card-item:hover {
+      transform: translateY(-2px);
+      border-color: #2563eb;
+    }
+
+    .card-item.out-of-stock {
+      opacity: 0.6;
+      cursor: not-allowed;
+      border-color: #fca5a5;
+      background-color: #fef2f2;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .card-price {
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .stock-badge {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    .stock-badge.normal { background: #dcfce7; color: #15803d; }
+    .stock-badge.low { background: #fef9c3; color: #a16207; }
+    .stock-badge.empty { background: #fee2e2; color: #b91c1c; }
+
+    /* Panel Kanan: Keranjang Pesanan */
+    .cart-panel {
+      flex: 1;
+      min-width: 330px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .cart-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .cart-item-name { font-size: 14px; font-weight: 600; }
+    .cart-item-sub { font-size: 12px; color: #64748b; }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-qty {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      width: 26px;
+      height: 26px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .checkout-section {
+      border-top: 2px solid #f1f5f9;
+      padding-top: 15px;
+    }
+
+    .row-summary.total {
+      font-weight: 700;
+      font-size: 20px;
+      color: #16a34a;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .btn-pay-main { background: #16a34a; color: #fff; font-size: 16px; padding: 14px; }
+    .btn-expense { background: #dc2626; color: #fff; }
+    .btn-stock { background: #d97706; color: #fff; }
+    .btn-history { background: #0284c7; color: #fff; }
+    .btn-excel { background: #15803d; color: #fff; }
+    .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
+
+    /* Modals Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Tab Metode Pembayaran */
+    .payment-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .pay-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: #f8fafc;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .pay-tab-btn.active {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+
+    .pay-tab-content {
+      display: none;
+      padding: 10px 0;
+    }
+
+    .pay-tab-content.active {
+      display: block;
+    }
+
+    /* Tampilan Gambar QRIS Diperbesar */
+    .qris-img-preview {
+      width: 340px;
+      height: 340px;
+      border: 2px solid #0f172a;
+      border-radius: 10px;
+      object-fit: contain;
+      margin: 15px auto;
+      display: block;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .custom-table th, .custom-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .custom-table th { background: #f1f5f9; }
+
+    .input-field {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Panel Left Menu -->
+    <div class="menu-panel">
+      <h1 class="header-title">Kasir Warkop</h1>
+      
+      <div class="categories">
+        <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
+        <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
+        <button class="cat-btn" onclick="filterCategory('minuman')">Minuman</button>
+      </div>
+
+      <div class="grid-menu" id="menuGrid"></div>
+    </div>
+
+    <!-- Panel Right Cart -->
+    <div class="cart-panel">
+      <h2 class="cart-title">Pesanan</h2>
+      
+      <div class="cart-items" id="cartItems">
+        <p style="text-align: center; color: #94a3b8; margin-top: 20px;">Belum ada pesanan</p>
+      </div>
+
+      <div class="checkout-section">
+        <div class="row-summary total">
+          <span>Total Tagihan:</span>
+          <span id="totalPrice">Rp 0</span>
+        </div>
+
+        <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Pilih Metode Pembayaran</button>
+        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catat Pengeluaran Harian</button>
+        <button class="btn-action btn-stock" onclick="openStockModal()">📦 Kelola Stok & Menu</button>
+        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Laba Rugi / Riwayat</button>
+        <button class="btn-action btn-excel" onclick="exportDailyRecapExcel()">📥 Download Rekap Excel</button>
+        <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pilih Metode Pembayaran (Lebar diperbesar ke 520px) -->
+  <div id="paymentModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 520px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>Pembayaran - <span id="modalPayTotal" style="color:#16a34a;">Rp 0</span></h3>
+        <button onclick="closePaymentModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Tab Opsi Metode -->
+      <div class="payment-tabs">
+        <button class="pay-tab-btn active" onclick="switchPayTab('tunai')">💵 Tunai</button>
+        <button class="pay-tab-btn" onclick="switchPayTab('qris')">📱 QRIS</button>
+        <button class="pay-tab-btn" onclick="switchPayTab('transfer')">🏦 Transfer</button>
+        <button class="pay-tab-btn" onclick="switchPayTab('debit')">💳 Debit</button>
+      </div>
+
+      <!-- Tab Content: Tunai -->
+      <div id="tabTunai" class="pay-tab-content active">
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Uang Tunai Diterima (Rp):</label>
+        <input type="number" id="cashAmountInput" class="input-field" placeholder="Masukkan nominal uang" oninput="calcCashChange()">
+        
+        <div style="display:flex; justify-content:space-between; margin:10px 0; font-size:15px;">
+          <span>Kembalian:</span>
+          <strong id="cashChangeText" style="color:#1e293b;">Rp 0</strong>
+        </div>
+
+        <button onclick="confirmCashPayment()" style="background:#16a34a; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px; margin-top:10px;">
+          ✅ Selesaikan Pembayaran Tunai
+        </button>
+      </div>
+
+      <!-- Tab Content: QRIS -->
+      <div id="tabQris" class="pay-tab-content">
+        <p style="text-align:center; font-size:13px; color:#64748b;">Scan QRIS di bawah untuk menyelesaikan pembayaran:</p>
+        <img id="qrisDisplayImg" class="qris-img-preview" src="" alt="Gambar QRIS Warkop">
+        
+        <div style="margin-bottom:10px; text-align:center;">
+          <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS atau nama file (misal: qris.jpg)" style="font-size:12px;">
+          <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">Simpan Gambar QRIS</button>
+        </div>
+
+        <button onclick="confirmNonCashPayment('QRIS')" style="background:#0f172a; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
+          ✅ Konfirmasi QRIS Berhasil
+        </button>
+      </div>
+
+      <!-- Tab Content: Transfer -->
+      <div id="tabTransfer" class="pay-tab-content">
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Pilih Bank / e-Wallet:</label>
+        <select id="transferBankSelect" class="input-field">
+          <option value="BCA">BCA</option>
+          <option value="Mandiri">Mandiri</option>
+          <option value="BRI">BRI</option>
+          <option value="BNI">BNI</option>
+          <option value="GoPay/OVO/Dana">GoPay / OVO / Dana</option>
+        </select>
+
+        <button onclick="confirmTransferPayment()" style="background:#2563eb; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
+          ✅ Konfirmasi Transfer Diterima
+        </button>
+      </div>
+
+      <!-- Tab Content: Debit -->
+      <div id="tabDebit" class="pay-tab-content">
+        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Nomor Reff / Kartu (Opsional):</label>
+        <input type="text" id="debitRefInput" class="input-field" placeholder="4 digit terakhir kartu atau no reff EDC">
+
+        <button onclick="confirmDebitPayment()" style="background:#d97706; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
+          ✅ Konfirmasi Pembayaran EDC Debit
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pengeluaran Harian -->
+  <div id="expenseModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>Catat Pengeluaran Warkop Hari Ini</h3>
+        <button onclick="closeExpenseModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addExpense(event)">
+        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan (contoh: Beli Es Batu, Gas)" required style="margin:0;">
+        <input type="number" id="expenseAmount" class="input-field" placeholder="Nominal (Rp)" required style="margin:0;">
+        <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Catat</button>
+      </form>
+
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Jam</th>
+              <th>Keterangan Pengeluaran</th>
+              <th>Nominal</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px; text-align:right;">
+        <strong>Total Pengeluaran: <span id="modalTotalExpense" style="color:#dc2626;">Rp 0</span></strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Kelola Stok & Menu -->
+  <div id="stockModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>Manajemen Stok & Menu Warkop</h3>
+        <button onclick="closeStockModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addNewProduct(event)">
+        <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
+        <input type="number" id="newPrice" class="input-field" placeholder="Harga" required style="margin:0;">
+        <select id="newCategory" class="input-field" style="margin:0;">
+          <option value="makanan">Makanan</option>
+          <option value="minuman">Minuman</option>
+        </select>
+        <input type="number" id="newStock" class="input-field" placeholder="Stok" required style="margin:0;">
+        <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Tambah</button>
+      </form>
+
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Nama Menu</th>
+              <th>Kategori</th>
+              <th>Harga</th>
+              <th>Stok Saat Ini</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Riwayat Transaksi & Laba Rugi -->
+  <div id="historyModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Laporan Penjualan & Laba Rugi Hari Ini</h3>
+        <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="overflow-y:auto; flex:1; margin-top:10px;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Jam</th>
+              <th>Menu</th>
+              <th>Qty</th>
+              <th>Metode</th>
+              <th>Total Penjualan</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Omset (Kotor):</span>
+          <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Pengeluaran:</span>
+          <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+          <span>Laba Bersih:</span>
+          <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end;">
+          <button onclick="resetDailyData()" style="background:#ef4444; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;">Reset / Tutup Buku Hari Ini</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultProducts = [
+      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20 },
+      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15 },
+      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30 },
+      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'minuman', stock: 50 },
+      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'minuman', stock: 40 },
+      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60 },
+      { id: 7, name: 'Nutrisari Dingin', price: 5000, category: 'minuman', stock: 25 }
+    ];
+
+    let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
+    let cart = [];
+    let dailyTransactions = JSON.parse(localStorage.getItem('warkop_daily_tx')) || [];
+    let dailyExpenses = JSON.parse(localStorage.getItem('warkop_daily_exp')) || [];
+    let currentCategory = 'semua';
+    let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
+
+    function saveProducts() {
+      localStorage.setItem('warkop_products', JSON.stringify(products));
+      renderMenuFilter();
+    }
+
+    function renderMenu(items) {
+      const grid = document.getElementById('menuGrid');
+      grid.innerHTML = '';
+      items.forEach(item => {
+        let badgeClass = 'normal';
+        let badgeText = `Stok: ${item.stock}`;
+        let isOutOfStock = false;
+
+        if (item.stock <= 0) {
+          badgeClass = 'empty';
+          badgeText = 'Habis';
+          isOutOfStock = true;
+        } else if (item.stock <= 5) {
+          badgeClass = 'low';
+          badgeText = `Sisa ${item.stock}`;
+        }
+
+        grid.innerHTML += `
+          <div class="card-item ${isOutOfStock ? 'out-of-stock' : ''}" onclick="${isOutOfStock ? '' : `addToCart(${item.id})`}">
+            <div class="card-title">${item.name}</div>
+            <div class="card-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+            <span class="stock-badge ${badgeClass}">${badgeText}</span>
+          </div>
+        `;
+      });
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderMenuFilter();
+    }
+
+    function renderMenuFilter() {
+      if (currentCategory === 'semua') {
+        renderMenu(products);
+      } else {
+        renderMenu(products.filter(p => p.category === currentCategory));
+      }
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(item => item.id === id);
+      const currentCartQty = existing ? existing.qty : 0;
+
+      if (currentCartQty + 1 > product.stock) {
+        alert(`Stok ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+        return;
+      }
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+      updateCart();
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      const product = products.find(p => p.id === id);
+
+      if (item) {
+        if (delta > 0 && item.qty + 1 > product.stock) {
+          alert(`Stok ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+          return;
+        }
+        item.qty += delta;
+        if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+      }
+      updateCart();
+    }
+
+    function updateCart() {
+      const cartContainer = document.getElementById('cartItems');
+      if (cart.length === 0) {
+        cartContainer.innerHTML = '<p style="text-align: center; color: #94a3b8; margin-top: 20px;">Belum ada pesanan</p>';
+      } else {
+        cartContainer.innerHTML = '';
+        cart.forEach(item => {
+          cartContainer.innerHTML += `
+            <div class="cart-item">
+              <div>
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-sub">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
+              </div>
+              <div class="qty-controls">
+                <button class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
+                <span style="font-weight:600;">${item.qty}</span>
+                <button class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    /* Modal Metode Pembayaran */
+    function openPaymentModal() {
+      if (cart.length === 0) {
+        alert('Keranjang masih kosong!');
+        return;
+      }
+
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      document.getElementById('modalPayTotal').innerText = 'Rp ' + total.toLocaleString('id-ID');
+      
+      const qrisImg = document.getElementById('qrisDisplayImg');
+      if (savedQrisUrl) {
+        qrisImg.src = savedQrisUrl;
+        document.getElementById('qrisUrlInput').value = savedQrisUrl;
+      } else {
+        const qrData = `00020101021126580014ID.CO.WARKOP.WWW0118936009143000000000520458125303360540${total}5802ID5912WARKOP_KASIR6007JAKARTA6304`;
+        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(qrData)}`;
+      }
+
+      document.getElementById('paymentModal').style.display = 'flex';
+      switchPayTab('tunai');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    function switchPayTab(tabName) {
+      document.querySelectorAll('.pay-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.pay-tab-content').forEach(c => c.classList.remove('active'));
+
+      if (tabName === 'tunai') {
+        document.querySelectorAll('.pay-tab-btn')[0].classList.add('active');
+        document.getElementById('tabTunai').classList.add('active');
+      } else if (tabName === 'qris') {
+        document.querySelectorAll('.pay-tab-btn')[1].classList.add('active');
+        document.getElementById('tabQris').classList.add('active');
+      } else if (tabName === 'transfer') {
+        document.querySelectorAll('.pay-tab-btn')[2].classList.add('active');
+        document.getElementById('tabTransfer').classList.add('active');
+      } else if (tabName === 'debit') {
+        document.querySelectorAll('.pay-tab-btn')[3].classList.add('active');
+        document.getElementById('tabDebit').classList.add('active');
+      }
+    }
+
+    function calcCashChange() {
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const cash = parseFloat(document.getElementById('cashAmountInput').value) || 0;
+      const change = cash - total;
+      const elem = document.getElementById('cashChangeText');
+
+      if (cash > 0 && change >= 0) {
+        elem.innerText = 'Rp ' + change.toLocaleString('id-ID');
+        elem.style.color = '#16a34a';
+      } else if (cash > 0 && change < 0) {
+        elem.innerText = 'Uang Kurang!';
+        elem.style.color = '#ef4444';
+      } else {
+        elem.innerText = 'Rp 0';
+        elem.style.color = '#1e293b';
+      }
+    }
+
+    function confirmCashPayment() {
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const cash = parseFloat(document.getElementById('cashAmountInput').value) || 0;
+
+      if (cash < total) {
+        alert('Uang pembayaran tunai masih kurang!');
+        return;
+      }
+
+      executeTransaction('Tunai');
+      alert('Pembayaran Tunai Berhasil!\nKembalian: Rp ' + (cash - total).toLocaleString('id-ID'));
+      closePaymentModal();
+      clearCart();
+    }
+
+    function saveQrisUrl() {
+      const url = document.getElementById('qrisUrlInput').value.trim();
+      if (url) {
+        savedQrisUrl = url;
+        localStorage.setItem('warkop_qris_url', url);
+        document.getElementById('qrisDisplayImg').src = url;
+        alert('Link QRIS warkop berhasil disimpan!');
+      }
+    }
+
+    function confirmNonCashPayment(methodName) {
+      executeTransaction(methodName);
+      alert(`Pembayaran via ${methodName} Berhasil!`);
+      closePaymentModal();
+      clearCart();
+    }
+
+    function confirmTransferPayment() {
+      const bank = document.getElementById('transferBankSelect').value;
+      executeTransaction(`Transfer (${bank})`);
+      alert(`Pembayaran Transfer ${bank} Berhasil Dikonfirmasi!`);
+      closePaymentModal();
+      clearCart();
+    }
+
+    function confirmDebitPayment() {
+      const ref = document.getElementById('debitRefInput').value.trim();
+      const methodLabel = ref ? `Debit (Reff: ${ref})` : 'Debit EDC';
+      executeTransaction(methodLabel);
+      alert('Pembayaran Debit Berhasil Dikonfirmasi!');
+      closePaymentModal();
+      clearCart();
+    }
+
+    function executeTransaction(method) {
+      const now = new Date();
+      cart.forEach(item => {
+        const prod = products.find(p => p.id === item.id);
+        if (prod) prod.stock -= item.qty;
+
+        dailyTransactions.push({
+          Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+          Menu: item.name,
+          Kategori: item.category,
+          Harga: item.price,
+          Qty: item.qty,
+          Metode: method,
+          Total: item.price * item.qty
+        });
+      });
+
+      saveProducts();
+      localStorage.setItem('warkop_daily_tx', JSON.stringify(dailyTransactions));
+    }
+
+    function clearCart() {
+      cart = [];
+      document.getElementById('cashAmountInput').value = '';
+      document.getElementById('cashChangeText').innerText = 'Rp 0';
+      updateCart();
+    }
+
+    /* Modal Pengeluaran */
+    function openExpenseModal() {
+      renderExpenseTable();
+      document.getElementById('expenseModal').style.display = 'flex';
+    }
+
+    function closeExpenseModal() {
+      document.getElementById('expenseModal').style.display = 'none';
+    }
+
+    function addExpense(e) {
+      e.preventDefault();
+      const name = document.getElementById('expenseName').value.trim();
+      const amount = parseFloat(document.getElementById('expenseAmount').value);
+
+      if (!name || isNaN(amount) || amount <= 0) return;
+
+      const now = new Date();
+      dailyExpenses.push({
+        id: Date.now(),
+        Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        Nama: name,
+        Nominal: amount
+      });
+
+      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      document.getElementById('expenseName').value = '';
+      document.getElementById('expenseAmount').value = '';
+      renderExpenseTable();
+    }
+
+    function deleteExpense(id) {
+      dailyExpenses = dailyExpenses.filter(exp => exp.id !== id);
+      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      renderExpenseTable();
+    }
+
+    function renderExpenseTable() {
+      const tbody = document.getElementById('expenseTableBody');
+      tbody.innerHTML = '';
+      let totalExp = 0;
+
+      if (dailyExpenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada pengeluaran hari ini</td></tr>';
+      } else {
+        dailyExpenses.forEach(exp => {
+          totalExp += exp.Nominal;
+          tbody.innerHTML += `
+            <tr>
+              <td>${exp.Waktu}</td>
+              <td>${exp.Nama}</td>
+              <td>Rp ${exp.Nominal.toLocaleString('id-ID')}</td>
+              <td>
+                <button onclick="deleteExpense(${exp.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
+    }
+
+    /* Modal Stok */
+    function openStockModal() {
+      renderStockTable();
+      document.getElementById('stockModal').style.display = 'flex';
+    }
+
+    function closeStockModal() {
+      document.getElementById('stockModal').style.display = 'none';
+    }
+
+    function renderStockTable() {
+      const tbody = document.getElementById('stockTableBody');
+      tbody.innerHTML = '';
+      products.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td style="text-transform:capitalize;">${p.category}</td>
+            <td>Rp ${p.price.toLocaleString('id-ID')}</td>
+            <td>
+              <input type="number" style="width:70px; padding:4px; text-align:center;" value="${p.stock}" onchange="updateStockDirect(${p.id}, this.value)">
+            </td>
+            <td>
+              <button onclick="deleteProduct(${p.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function updateStockDirect(id, newStockVal) {
+      const val = parseInt(newStockVal);
+      if (isNaN(val) || val < 0) return;
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.stock = val;
+        saveProducts();
+      }
+    }
+
+    function addNewProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('newName').value.trim();
+      const price = parseFloat(document.getElementById('newPrice').value);
+      const category = document.getElementById('newCategory').value;
+      const stock = parseInt(document.getElementById('newStock').value);
+
+      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      products.push({ id: newId, name, price, category, stock });
+      
+      saveProducts();
+      renderStockTable();
+
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newStock').value = '';
+    }
+
+    function deleteProduct(id) {
+      if (confirm('Yakin ingin menghapus menu ini?')) {
+        products = products.filter(p => p.id !== id);
+        saveProducts();
+        renderStockTable();
+      }
+    }
+
+    /* Modal Riwayat */
+    function openHistoryModal() {
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
+
+      let totalOmset = 0;
+      let totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+
+      if (dailyTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi hari ini</td></tr>';
+      } else {
+        dailyTransactions.forEach(tx => {
+          totalOmset += tx.Total;
+          tbody.innerHTML += `
+            <tr>
+              <td>${tx.Waktu}</td>
+              <td>${tx.Menu}</td>
+              <td>${tx.Qty}</td>
+              <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
+              <td>Rp ${tx.Total.toLocaleString('id-ID')}</td>
+            </tr>
+          `;
+        });
+      }
+
+      const netProfit = totalOmset - totalExpense;
+      document.getElementById('modalTotalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
+      document.getElementById('modalSummaryExpense').innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
+      document.getElementById('modalNetProfit').innerText = 'Rp ' + netProfit.toLocaleString('id-ID');
+
+      document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').style.display = 'none';
+    }
+
+    function resetDailyData() {
+      if (confirm('Yakin ingin reset riwayat harian? Semua transaksi & pengeluaran hari ini akan dikosongkan.')) {
+        dailyTransactions = [];
+        dailyExpenses = [];
+        localStorage.removeItem('warkop_daily_tx');
+        localStorage.removeItem('warkop_daily_exp');
+        openHistoryModal();
+        alert('Tutup buku berhasil. Data harian telah dibersihkan.');
+      }
+    }
+
+    /* Export Excel */
+    function exportDailyRecapExcel() {
+      if (dailyTransactions.length === 0 && dailyExpenses.length === 0) {
+        alert('Belum ada data transaksi atau pengeluaran hari ini!');
+        return;
+      }
+
+      const menuSummary = {};
+      let totalOmset = 0;
+
+      dailyTransactions.forEach(tx => {
+        if (!menuSummary[tx.Menu]) {
+          menuSummary[tx.Menu] = { Kategori: tx.Kategori, Harga: tx.Harga, Qty: 0, Total: 0 };
+        }
+        menuSummary[tx.Menu].Qty += tx.Qty;
+        menuSummary[tx.Menu].Total += tx.Total;
+        totalOmset += tx.Total;
+      });
+
+      const totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+      const netProfit = totalOmset - totalExpense;
+
+      const excelData = [
+        ["LAPORAN REKAP HARIAN WARKOP"],
+        ["Tanggal:", new Date().toLocaleDateString('id-ID')],
+        [""],
+        ["--- RINGKASAN PENJUALAN ---"],
+        ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
+      ];
+
+      let no = 1;
+      for (const [menuName, val] of Object.entries(menuSummary)) {
+        excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
+      }
+      excelData.push(["", "TOTAL OMSET PENJUALAN", "", "", "", totalOmset]);
+      excelData.push([""]);
+
+      excelData.push(["--- RINGKASAN PENGELUARAN ---"]);
+      excelData.push(["No", "Jam", "Keterangan Pengeluaran", "", "", "Nominal"]);
+      
+      let noExp = 1;
+      dailyExpenses.forEach(exp => {
+        excelData.push([noExp++, exp.Waktu, exp.Nama, "", "", exp.Nominal]);
+      });
+      excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
+      excelData.push([""]);
+
+      excelData.push(["--- RINGKASAN LABA RUGI ---"]);
+      excelData.push(["Total Omset Penjualan", totalOmset]);
+      excelData.push(["Total Pengeluaran Operasional", totalExpense]);
+      excelData.push(["LABA BERSIH HARIAN", netProfit]);
+
+      const ws = XLSX.utils.aoa_to_sheet(excelData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Harian");
+
+      const fileName = `Rekap_Lengkap_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    }
+
+    renderMenuFilter();
+  </script>
+</body>
+</html>
