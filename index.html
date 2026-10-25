@@ -307,10 +307,7 @@
   <div class="container">
     <!-- Panel Left Menu -->
     <div class="menu-panel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h1 class="header-title" style="margin:0;">Kasir Warkop</h1>
-        <button onclick="changeAdminPin()" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:600;">🔒 Ubah PIN Admin</button>
-      </div>
+      <h1 class="header-title">Kasir Warkop</h1>
       
       <!-- Kolom Pencarian Menu -->
       <div class="search-box">
@@ -550,31 +547,16 @@
     let dailyExpenses = JSON.parse(localStorage.getItem('warkop_daily_exp')) || [];
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
-    let adminPin = localStorage.getItem('warkop_admin_pin') || '1234';
 
-    /* Fitur Proteksi PIN Admin */
+    /* PIN ADMIN TUNGGAL (Terkunci untuk semua device) */
+    const adminPin = '4M112208';
+
     function protectedAccess(callback) {
       const inputPin = prompt('Masukkan PIN Admin untuk mengakses fitur ini:');
       if (inputPin === adminPin) {
         callback();
       } else if (inputPin !== null) {
         alert('PIN Admin Salah! Akses Ditolak.');
-      }
-    }
-
-    function changeAdminPin() {
-      const currentPin = prompt('Masukkan PIN Admin saat ini:');
-      if (currentPin === adminPin) {
-        const newPin = prompt('Masukkan PIN Admin baru:');
-        if (newPin && newPin.trim().length >= 4) {
-          adminPin = newPin.trim();
-          localStorage.setItem('warkop_admin_pin', adminPin);
-          alert('PIN Admin berhasil diubah!');
-        } else {
-          alert('PIN minimal 4 karakter!');
-        }
-      } else if (currentPin !== null) {
-        alert('PIN saat ini salah!');
       }
     }
 
