@@ -3,349 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Warkop - POS & Audit Log Restok</title>
-  <!-- Library SheetJS untuk Export Excel -->
+  <title>Kasir Warkop - POS System</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
+    .container { display: flex; width: 100%; height: 100%; }
 
-    body {
-      background-color: #f8fafc;
-      color: #1e293b;
-      height: 100vh;
-      display: flex;
-      overflow: hidden;
-    }
+    .menu-panel { flex: 2; padding: 20px; overflow-y: auto; border-right: 1px solid #e2e8f0; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .header-title { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .btn-admin-login { background: #0f172a; color: #ffffff; padding: 8px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
-    .container {
-      display: flex;
-      width: 100%;
-      height: 100%;
-    }
+    .search-box { margin-bottom: 15px; }
+    .categories { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .cat-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 20px; background: #ffffff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
+    .cat-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
 
-    /* Panel Kiri: Menu Kasir */
-    .menu-panel {
-      flex: 2;
-      padding: 20px;
-      overflow-y: auto;
-      border-right: 1px solid #e2e8f0;
-    }
+    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+    .card-item { background: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.1s, border-color 0.2s; }
+    .card-item:hover { transform: translateY(-2px); border-color: #2563eb; }
+    .card-item.out-of-stock { opacity: 0.6; cursor: not-allowed; border-color: #fca5a5; background-color: #fef2f2; }
+    .card-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+    .card-price { color: #2563eb; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
 
-    .top-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .header-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    .btn-admin-login {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .search-box {
-      margin-bottom: 15px;
-    }
-
-    .categories {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .cat-btn {
-      padding: 8px 16px;
-      border: 1px solid #cbd5e1;
-      border-radius: 20px;
-      background: #ffffff;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 14px;
-      transition: all 0.2s;
-    }
-
-    .cat-btn.active {
-      background: #2563eb;
-      color: #ffffff;
-      border-color: #2563eb;
-    }
-
-    .grid-menu {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 15px;
-    }
-
-    .card-item {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-      cursor: pointer;
-      border: 1px solid #e2e8f0;
-      transition: transform 0.1s, border-color 0.2s;
-    }
-
-    .card-item:hover {
-      transform: translateY(-2px);
-      border-color: #2563eb;
-    }
-
-    .card-item.out-of-stock {
-      opacity: 0.6;
-      cursor: not-allowed;
-      border-color: #fca5a5;
-      background-color: #fef2f2;
-    }
-
-    .card-title {
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 6px;
-    }
-
-    .card-price {
-      color: #2563eb;
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .stock-badge {
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 12px;
-      display: inline-block;
-      font-weight: 600;
-    }
-
+    .stock-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: 600; }
     .stock-badge.normal { background: #dcfce7; color: #15803d; }
     .stock-badge.low { background: #fef9c3; color: #a16207; }
     .stock-badge.empty { background: #fee2e2; color: #b91c1c; }
 
-    /* Panel Kanan: Keranjang Pesanan */
-    .cart-panel {
-      flex: 1;
-      min-width: 330px;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03);
-    }
-
-    .cart-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 10px;
-    }
-
-    .cart-items {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 15px;
-    }
-
-    .cart-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px dashed #e2e8f0;
-    }
-
+    .cart-panel { flex: 1; min-width: 330px; background: #ffffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
+    .cart-title { font-size: 20px; font-weight: 700; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .cart-items { flex: 1; overflow-y: auto; margin-bottom: 15px; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
     .cart-item-name { font-size: 14px; font-weight: 600; }
     .cart-item-sub { font-size: 12px; color: #64748b; }
 
-    .qty-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .qty-controls { display: flex; align-items: center; gap: 8px; }
+    .btn-qty { background: #f1f5f9; border: 1px solid #cbd5e1; width: 26px; height: 26px; border-radius: 4px; font-weight: bold; cursor: pointer; }
 
-    .btn-qty {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      width: 26px;
-      height: 26px;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .checkout-section {
-      border-top: 2px solid #f1f5f9;
-      padding-top: 15px;
-    }
-
-    .row-summary.total {
-      font-weight: 700;
-      font-size: 20px;
-      color: #16a34a;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .btn-action {
-      width: 100%;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 8px;
-    }
-
+    .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 15px; }
+    .row-summary.total { font-weight: 700; font-size: 20px; color: #16a34a; margin-bottom: 15px; display: flex; justify-content: space-between; }
+    .btn-action { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
     .btn-pay-main { background: #16a34a; color: #fff; font-size: 16px; padding: 14px; }
-    .btn-restock-karyawan { background: #d97706; color: #fff; }
-    .btn-log-restock { background: #475569; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
+    .btn-history { background: #0284c7; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
-    /* Modals Overlay */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: #ffffff; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; }
+    
+    .payment-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .pay-tab-btn { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-weight: 600; font-size: 13px; cursor: pointer; text-align: center; }
+    .pay-tab-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+    .pay-tab-content { display: none; padding: 10px 0; }
+    .pay-tab-content.active { display: block; }
 
-    .modal-content {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 600px;
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .payment-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #f1f5f9;
-      padding-bottom: 10px;
-    }
-
-    .pay-tab-btn {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      background: #f8fafc;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .pay-tab-btn.active {
-      background: #0f172a;
-      color: #ffffff;
-      border-color: #0f172a;
-    }
-
-    .pay-tab-content {
-      display: none;
-      padding: 10px 0;
-    }
-
-    .pay-tab-content.active {
-      display: block;
-    }
-
-    .qris-img-preview {
-      width: 340px;
-      height: 340px;
-      border: 2px solid #0f172a;
-      border-radius: 10px;
-      object-fit: contain;
-      margin: 15px auto;
-      display: block;
-      background: #fff;
-      padding: 10px;
-    }
-
-    .custom-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-
-    .custom-table th, .custom-table td {
-      border: 1px solid #cbd5e1;
-      padding: 8px 10px;
-      text-align: left;
-      font-size: 13px;
-    }
-
+    .qris-img-preview { width: 320px; height: 320px; border: 2px solid #0f172a; border-radius: 10px; object-fit: contain; margin: 15px auto; display: block; background: #fff; padding: 10px; }
+    .custom-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 13px; }
     .custom-table th { background: #f1f5f9; }
 
-    .input-field {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 14px;
-      margin-bottom: 10px;
+    .input-field { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+
+    #receiptPrintArea { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
+      #receiptPrintArea { display: block !important; position: absolute; left: 0; top: 0; width: 58mm; padding: 6px 2px; font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; background: #fff; }
+      .receipt-header, .receipt-footer { text-align: center; }
+      .receipt-divider { border-top: 1px dashed #000; margin: 6px 0; }
+      .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- Panel Left Menu -->
     <div class="menu-panel">
       <div class="top-header">
         <h1 class="header-title">Kasir Warkop</h1>
-        <button class="btn-admin-login" onclick="loginAdmin()">🔑 Dashboard Owner / Admin</button>
+        <button class="btn-admin-login" onclick="loginAdmin()">🔑 Dashboard Owner</button>
       </div>
       
-      <!-- Kolom Pencarian Menu -->
       <div class="search-box">
-        <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu di sini..." oninput="renderMenuFilter()" style="margin:0;">
+        <input type="text" id="searchInput" class="input-field" placeholder="🔍 Cari nama menu..." oninput="renderMenuFilter()" style="margin:0;">
       </div>
 
       <div class="categories">
         <button class="cat-btn active" onclick="filterCategory('semua')">Semua</button>
         <button class="cat-btn" onclick="filterCategory('makanan')">Makanan</button>
         <button class="cat-btn" onclick="filterCategory('minuman')">Minuman</button>
+        <button class="cat-btn" onclick="filterCategory('rice bowl')">Rice Bowl</button>
+        <button class="cat-btn" onclick="filterCategory('roti bakar')">Roti Bakar</button>
+        <button class="cat-btn" onclick="filterCategory('pisang bakar')">Pisang Bakar</button>
+        <button class="cat-btn" onclick="filterCategory('cemilan')">Cemilan</button>
+        <button class="cat-btn" onclick="filterCategory('kopi')">Kopi</button>
+        <button class="cat-btn" onclick="filterCategory('malaka')">Malaka</button>
+        <button class="cat-btn" onclick="filterCategory('coklat')">Coklat</button>
+        <button class="cat-btn" onclick="filterCategory('soda')">Soda</button>
+        <button class="cat-btn" onclick="filterCategory('nutrisari')">Nutrisari</button>
+        <button class="cat-btn" onclick="filterCategory('susu')">Susu</button>
       </div>
 
       <div class="grid-menu" id="menuGrid"></div>
     </div>
 
-    <!-- Panel Right Cart -->
     <div class="cart-panel">
       <h2 class="cart-title">Pesanan</h2>
-      
       <div class="cart-items" id="cartItems">
         <p style="text-align: center; color: #94a3b8; margin-top: 20px;">Belum ada pesanan</p>
       </div>
@@ -356,116 +121,15 @@
           <span id="totalPrice">Rp 0</span>
         </div>
 
-        <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Pilih Metode Pembayaran</button>
-        <button class="btn-action btn-restock-karyawan" onclick="openAddStockModal()">📥 Input Barang Masuk (Restok)</button>
-        <button class="btn-action btn-log-restock" onclick="openRestockLogModal()">📋 Lihat Log Barang Masuk</button>
-        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catat Pengeluaran Harian</button>
+        <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Metode Pembayaran</button>
+        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran Harian</button>
+        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Penjualan & Tutup Buku Bulanan</button>
         <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
       </div>
     </div>
   </div>
 
-  <!-- Modal 1: Input Restok / Barang Masuk Karyawan (+Qty dengan Catatan Log) -->
-  <div id="addStockModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 500px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>📥 Catat Penambahan Barang Masuk</h3>
-        <button onclick="closeAddStockModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <form onsubmit="submitRestock(event)">
-        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Pilih Menu / Bahan:</label>
-        <select id="restockProductSelect" class="input-field" required></select>
-
-        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Jumlah Ditambahkan (Pcs/Porsi):</label>
-        <input type="number" id="restockQtyInput" class="input-field" min="1" placeholder="Contoh: 24" required>
-
-        <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Keterangan / Sumber (Wajib):</label>
-        <input type="text" id="restockNoteInput" class="input-field" placeholder="Contoh: Belanja Agen, Titipan Supplier" required>
-
-        <button type="submit" style="background:#d97706; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; margin-top:10px;">
-          + Simpan Penambahan Stok & Catat Log
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal 2: Log Audit Riwayat Barang Masuk -->
-  <div id="restockLogModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 650px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>📋 Log Riwayat Barang Masuk</h3>
-        <button onclick="closeRestockLogModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <div style="overflow-y:auto; flex:1;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Tanggal & Waktu</th>
-              <th>Nama Menu</th>
-              <th>Tambahan Stok</th>
-              <th>Keterangan</th>
-            </tr>
-          </thead>
-          <tbody id="restockLogTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal 3: Dashboard Admin Khusus Owner (Perlu PIN) -->
-  <div id="adminModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 750px; height: 90vh;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
-        <h3>🔑 Dashboard Khusus Owner</h3>
-        <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout Admin</button>
-      </div>
-
-      <!-- Fitur Admin 1: Tambah Menu Baru -->
-      <div style="margin-top:15px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-        <h4 style="margin-bottom:8px;">+ Buat Menu Baru</h4>
-        <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px;" onsubmit="addNewProduct(event)">
-          <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
-          <input type="number" id="newPrice" class="input-field" placeholder="Harga" required style="margin:0;">
-          <select id="newCategory" class="input-field" style="margin:0;">
-            <option value="makanan">Makanan</option>
-            <option value="minuman">Minuman</option>
-          </select>
-          <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
-          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
-        </form>
-      </div>
-
-      <!-- Fitur Admin 2: Ubah Harga & Hapus Menu -->
-      <div style="overflow-y:auto; flex:1; margin-top:15px;">
-        <h4 style="margin-bottom:8px;">Kelola Harga & Menu</h4>
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Nama Menu</th>
-              <th>Kategori</th>
-              <th>Harga (Rp)</th>
-              <th>Stok Saat Ini</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="adminStockTableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- Fitur Admin 3: Laporan Keuangan & Reset Buku -->
-      <div style="margin-top:15px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <button onclick="openHistoryModal()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📜 Laporan Laba Rugi Hari Ini</button>
-          <button onclick="exportDailyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px; margin-left:5px;">📥 Download Excel</button>
-        </div>
-        <button onclick="resetDailyData()" style="background:#ef4444; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">⚠️ Tutup Buku Hari Ini</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Pilih Metode Pembayaran -->
+  <!-- Modal Pembayaran -->
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 520px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -497,13 +161,7 @@
       <div id="tabQris" class="pay-tab-content">
         <p style="text-align:center; font-size:13px; color:#64748b;">Scan QRIS di bawah untuk menyelesaikan pembayaran:</p>
         <img id="qrisDisplayImg" class="qris-img-preview" src="" alt="Gambar QRIS Warkop">
-        
-        <div style="margin-bottom:10px; text-align:center;">
-          <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS atau nama file (misal: qris.jpg)" style="font-size:12px;">
-          <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 14px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:600;">Simpan Gambar QRIS</button>
-        </div>
-
-        <button onclick="confirmNonCashPayment('QRIS')" style="background:#0f172a; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
+        <button onclick="confirmNonCashPayment('QRIS')" style="background:#0f172a; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px; margin-top:10px;">
           ✅ Konfirmasi QRIS Berhasil
         </button>
       </div>
@@ -517,7 +175,6 @@
           <option value="BNI">BNI</option>
           <option value="GoPay/OVO/Dana">GoPay / OVO / Dana</option>
         </select>
-
         <button onclick="confirmTransferPayment()" style="background:#2563eb; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
           ✅ Konfirmasi Transfer Diterima
         </button>
@@ -526,7 +183,6 @@
       <div id="tabDebit" class="pay-tab-content">
         <label style="font-size:13px; font-weight:600; display:block; margin-bottom:5px;">Nomor Reff / Kartu (Opsional):</label>
         <input type="text" id="debitRefInput" class="input-field" placeholder="4 digit terakhir kartu atau no reff EDC">
-
         <button onclick="confirmDebitPayment()" style="background:#d97706; color:#fff; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:700; width:100%; font-size:15px;">
           ✅ Konfirmasi Pembayaran EDC Debit
         </button>
@@ -534,16 +190,16 @@
     </div>
   </div>
 
-  <!-- Modal Pengeluaran Harian -->
+  <!-- Modal Pengeluaran -->
   <div id="expenseModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>Catat Pengeluaran Warkop Hari Ini</h3>
+        <h3>Catatan Pengeluaran Harian Warkop</h3>
         <button onclick="closeExpenseModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
       <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addExpense(event)">
-        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan (contoh: Beli Es Batu, Gas)" required style="margin:0;">
+        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan" required style="margin:0;">
         <input type="number" id="expenseAmount" class="input-field" placeholder="Nominal (Rp)" required style="margin:0;">
         <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Catat</button>
       </form>
@@ -552,7 +208,7 @@
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Jam</th>
+              <th>Tanggal</th>
               <th>Keterangan Pengeluaran</th>
               <th>Nominal</th>
               <th>Aksi</th>
@@ -568,11 +224,11 @@
     </div>
   </div>
 
-  <!-- Modal Riwayat Transaksi & Laba Rugi -->
+  <!-- Modal Tutup Buku Bulanan -->
   <div id="historyModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>Laporan Penjualan & Laba Rugi Hari Ini</h3>
+        <h3>Laporan Penjualan & Tutup Buku Bulanan</h3>
         <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
@@ -580,7 +236,7 @@
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Jam</th>
+              <th>Tanggal Transaksi</th>
               <th>Menu</th>
               <th>Qty</th>
               <th>Metode</th>
@@ -593,47 +249,173 @@
 
       <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Omset (Kotor):</span>
+          <span>Total Omset Bulanan:</span>
           <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Pengeluaran:</span>
+          <span>Total Pengeluaran Bulanan:</span>
           <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-          <span>Laba Bersih:</span>
+          <span>Laba Bersih Bulanan:</span>
           <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end;">
+          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Modal Admin Dashboard -->
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px; height: 90vh;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
+        <h3>🔑 Dashboard Owner (Manajemen Stok & Sistem)</h3>
+        <div>
+          <button onclick="resetDefaultMenu()" style="background:#d97706; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; margin-right:5px;">🔄 Reset Menu Default</button>
+          <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; background:#fef3c7; padding:12px; border-radius:8px; border:1px solid #fde68a;">
+        <h4 style="margin-bottom:8px; color:#92400e;">📥 Input Barang Masuk (Restok)</h4>
+        <form style="display:grid; grid-template-columns: 2fr 1fr 2fr auto; gap:8px;" onsubmit="submitRestock(event)">
+          <select id="restockProductSelect" class="input-field" style="margin:0;" required></select>
+          <input type="number" id="restockQtyInput" class="input-field" placeholder="+Qty" min="1" required style="margin:0;">
+          <input type="text" id="restockNoteInput" class="input-field" placeholder="Keterangan" required style="margin:0;">
+          <button type="submit" style="background:#d97706; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Restok</button>
+        </form>
+      </div>
+
+      <div style="margin-top:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+        <h4 style="margin-bottom:8px;">+ Buat Menu Baru</h4>
+        <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px;" onsubmit="addNewProduct(event)">
+          <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
+          <input type="number" id="newPrice" class="input-field" placeholder="Harga (Rp)" required style="margin:0;">
+          <select id="newCategory" class="input-field" style="margin:0;">
+            <option value="makanan">Makanan</option>
+            <option value="minuman">Minuman</option>
+            <option value="rice bowl">Rice Bowl</option>
+            <option value="roti bakar">Roti Bakar</option>
+            <option value="pisang bakar">Pisang Bakar</option>
+            <option value="cemilan">Cemilan</option>
+            <option value="kopi">Kopi</option>
+            <option value="malaka">Malaka</option>
+            <option value="coklat">Coklat</option>
+            <option value="soda">Soda</option>
+            <option value="nutrisari">Nutrisari</option>
+            <option value="susu">Susu</option>
+          </select>
+          <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
+          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
+        </form>
+      </div>
+
+      <div style="margin-top:12px; background:#f0f9ff; padding:10px; border-radius:8px; border:1px solid #bae6fd; display:flex; gap:8px; align-items:center;">
+        <span style="font-size:13px; font-weight:600; white-space:nowrap;">Link URL QRIS:</span>
+        <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS" style="margin:0; font-size:12px;">
+        <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; white-space:nowrap;">Simpan QRIS</button>
+      </div>
+
+      <div style="overflow-y:auto; flex:1; margin-top:12px;">
+        <h4 style="margin-bottom:8px;">Kelola Harga, Stok & Hapus Menu</h4>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Nama Menu</th>
+              <th>Kategori</th>
+              <th>Harga (Rp)</th>
+              <th>Stok Saat Ini</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="adminStockTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:12px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📋 Audit Log Restok</button>
+        <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">📥 Download Rekap Excel Bulanan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Log Audit Restok -->
+  <div id="restockLogModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>📋 Log Audit Riwayat Barang Masuk</h3>
+        <button onclick="closeRestockLogModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Nama Menu</th>
+              <th>Tambahan Stok</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="restockLogTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="receiptPrintArea"></div>
 
   <script>
     const defaultProducts = [
       { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20 },
       { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15 },
       { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30 },
-      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'minuman', stock: 50 },
-      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'minuman', stock: 40 },
+      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50 },
+      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40 },
       { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60 },
-      { id: 7, name: 'Nutrisari Dingin', price: 5000, category: 'minuman', stock: 25 }
+      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25 },
+      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20 },
+      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15 },
+      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20 },
+      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15 },
+      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25 },
+      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20 },
+      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30 },
+      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25 },
+      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35 },
+      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30 },
+      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25 },
+      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30 },
+      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20 }
     ];
 
-    let products = JSON.parse(localStorage.getItem('warkop_products')) || defaultProducts;
+    let savedProducts = JSON.parse(localStorage.getItem('warkop_products'));
+    let products = (savedProducts && savedProducts.length > 0) ? savedProducts : defaultProducts;
+
     let cart = [];
-    let dailyTransactions = JSON.parse(localStorage.getItem('warkop_daily_tx')) || [];
-    let dailyExpenses = JSON.parse(localStorage.getItem('warkop_daily_exp')) || [];
+    let monthlyTransactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
+    let monthlyExpenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
     let restockLogs = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || '';
 
-    /* PIN ADMIN KHUSUS OWNER */
     const adminPin = '4M112208';
+
+    function resetDefaultMenu() {
+      if (confirm('Yakin ingin mereset seluruh daftar menu ke versi bawaan terbaru?')) {
+        localStorage.removeItem('warkop_products');
+        location.reload();
+      }
+    }
 
     function loginAdmin() {
       const inputPin = prompt('Masukkan PIN Owner / Admin:');
       if (inputPin === adminPin) {
         renderAdminStockTable();
+        populateRestockSelect();
+        document.getElementById('qrisUrlInput').value = savedQrisUrl;
         document.getElementById('adminModal').style.display = 'flex';
       } else if (inputPin !== null) {
         alert('PIN Admin Salah! Akses Ditolak.');
@@ -642,7 +424,7 @@
 
     function logoutAdmin() {
       document.getElementById('adminModal').style.display = 'none';
-      alert('Sesi Admin Dikunci Kembali.');
+      alert('Sesi Admin Berhasil Dikunci Kembali.');
     }
 
     function saveProducts() {
@@ -691,10 +473,9 @@
 
     function renderMenuFilter() {
       const searchQuery = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
-      
       let filtered = products;
       if (currentCategory !== 'semua') {
-        filtered = filtered.filter(p => p.category === currentCategory);
+        filtered = filtered.filter(p => p.category.toLowerCase() === currentCategory.toLowerCase());
       }
       if (searchQuery) {
         filtered = filtered.filter(p => p.name.toLowerCase().includes(searchQuery));
@@ -762,152 +543,6 @@
       document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
-    /* Modal Restok versi Karyawan (+Qty + Log) */
-    function openAddStockModal() {
-      const select = document.getElementById('restockProductSelect');
-      select.innerHTML = '';
-      products.forEach(p => {
-        select.innerHTML += `<option value="${p.id}">${p.name} (Stok Saat Ini: ${p.stock})</option>`;
-      });
-
-      document.getElementById('restockQtyInput').value = '';
-      document.getElementById('restockNoteInput').value = '';
-      document.getElementById('addStockModal').style.display = 'flex';
-    }
-
-    function closeAddStockModal() {
-      document.getElementById('addStockModal').style.display = 'none';
-    }
-
-    function submitRestock(e) {
-      e.preventDefault();
-      const prodId = parseInt(document.getElementById('restockProductSelect').value);
-      const qtyAdd = parseInt(document.getElementById('restockQtyInput').value);
-      const note = document.getElementById('restockNoteInput').value.trim();
-
-      if (isNaN(qtyAdd) || qtyAdd <= 0 || !note) {
-        alert('Mohon isi jumlah penambahan stok dan keterangan!');
-        return;
-      }
-
-      const product = products.find(p => p.id === prodId);
-      if (product) {
-        product.stock += qtyAdd;
-        saveProducts();
-
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('id-ID') + ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-        restockLogs.unshift({
-          Waktu: dateStr,
-          Menu: product.name,
-          QtyTambahan: qtyAdd,
-          Keterangan: note
-        });
-
-        localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
-        alert(`Stok ${product.name} berhasil ditambah +${qtyAdd}! Log tercatat.`);
-        closeAddStockModal();
-      }
-    }
-
-    /* Modal Log Audit Restok */
-    function openRestockLogModal() {
-      const tbody = document.getElementById('restockLogTableBody');
-      tbody.innerHTML = '';
-
-      if (restockLogs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat penambahan stok</td></tr>';
-      } else {
-        restockLogs.forEach(log => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${log.Waktu}</td>
-              <td><strong>${log.Menu}</strong></td>
-              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
-              <td>${log.Keterangan}</td>
-            </tr>
-          `;
-        });
-      }
-
-      document.getElementById('restockLogModal').style.display = 'flex';
-    }
-
-    function closeRestockLogModal() {
-      document.getElementById('restockLogModal').style.display = 'none';
-    }
-
-    /* Kelola Menu versi Admin (Owner Only) */
-    function renderAdminStockTable() {
-      const tbody = document.getElementById('adminStockTableBody');
-      tbody.innerHTML = '';
-      products.forEach(p => {
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${p.name}</strong></td>
-            <td style="text-transform:capitalize;">${p.category}</td>
-            <td>
-              <input type="number" style="width:90px; padding:4px;" value="${p.price}" onchange="updatePriceDirect(${p.id}, this.value)">
-            </td>
-            <td>
-              <input type="number" style="width:70px; padding:4px; text-align:center;" value="${p.stock}" onchange="updateStockDirect(${p.id}, this.value)">
-            </td>
-            <td>
-              <button onclick="deleteProduct(${p.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function updateStockDirect(id, newStockVal) {
-      const val = parseInt(newStockVal);
-      if (isNaN(val) || val < 0) return;
-      const product = products.find(p => p.id === id);
-      if (product) {
-        product.stock = val;
-        saveProducts();
-      }
-    }
-
-    function updatePriceDirect(id, newPriceVal) {
-      const val = parseFloat(newPriceVal);
-      if (isNaN(val) || val < 0) return;
-      const product = products.find(p => p.id === id);
-      if (product) {
-        product.price = val;
-        saveProducts();
-      }
-    }
-
-    function addNewProduct(e) {
-      e.preventDefault();
-      const name = document.getElementById('newName').value.trim();
-      const price = parseFloat(document.getElementById('newPrice').value);
-      const category = document.getElementById('newCategory').value;
-      const stock = parseInt(document.getElementById('newStock').value);
-
-      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({ id: newId, name, price, category, stock });
-      
-      saveProducts();
-      renderAdminStockTable();
-
-      document.getElementById('newName').value = '';
-      document.getElementById('newPrice').value = '';
-      document.getElementById('newStock').value = '';
-    }
-
-    function deleteProduct(id) {
-      if (confirm('Yakin ingin menghapus menu ini?')) {
-        products = products.filter(p => p.id !== id);
-        saveProducts();
-        renderAdminStockTable();
-      }
-    }
-
-    /* Modal Metode Pembayaran */
     function openPaymentModal() {
       if (cart.length === 0) {
         alert('Keranjang masih kosong!');
@@ -920,10 +555,9 @@
       const qrisImg = document.getElementById('qrisDisplayImg');
       if (savedQrisUrl) {
         qrisImg.src = savedQrisUrl;
-        document.getElementById('qrisUrlInput').value = savedQrisUrl;
       } else {
         const qrData = `00020101021126580014ID.CO.WARKOP.WWW0118936009143000000000520458125303360540${total}5802ID5912WARKOP_KASIR6007JAKARTA6304`;
-        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=${encodeURIComponent(qrData)}`;
+        qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrData)}`;
       }
 
       document.getElementById('paymentModal').style.display = 'flex';
@@ -971,6 +605,62 @@
       }
     }
 
+    function printThermalReceipt(method, cashAmount = 0, changeAmount = 0) {
+      const printArea = document.getElementById('receiptPrintArea');
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+      let itemsHtml = '';
+      cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        itemsHtml += `
+          <div style="font-weight:bold;">${item.name}</div>
+          <div class="receipt-row">
+            <span>${item.qty} x ${item.price.toLocaleString('id-ID')}</span>
+            <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
+          </div>
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="receipt-header">
+          <h2 style="font-size:14px; margin-bottom:2px;">WARKOP KASIR</h2>
+          <p style="font-size:10px;">Struk Pembayaran Warkop</p>
+          <p style="font-size:10px;">${dateStr} - ${timeStr}</p>
+        </div>
+        <div class="receipt-divider"></div>
+        ${itemsHtml}
+        <div class="receipt-divider"></div>
+        <div class="receipt-row" style="font-weight:bold;">
+          <span>TOTAL</span>
+          <span>Rp ${total.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Metode</span>
+          <span>${method}</span>
+        </div>
+        ${method === 'Tunai' ? `
+        <div class="receipt-row">
+          <span>Bayar</span>
+          <span>Rp ${cashAmount.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Kembali</span>
+          <span>Rp ${changeAmount.toLocaleString('id-ID')}</span>
+        </div>
+        ` : ''}
+        <div class="receipt-divider"></div>
+        <div class="receipt-footer">
+          <p>Terima Kasih!</p>
+          <p>Selamat Menikmati 🙏</p>
+        </div>
+      `;
+
+      window.print();
+    }
+
     function confirmCashPayment() {
       const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       const cash = parseFloat(document.getElementById('cashAmountInput').value) || 0;
@@ -980,33 +670,33 @@
         return;
       }
 
+      const change = cash - total;
+      
+      if (confirm('Pembayaran Tunai Berhasil!\nKembalian: Rp ' + change.toLocaleString('id-ID') + '\n\nApakah mau cetak nota?')) {
+        printThermalReceipt('Tunai', cash, change);
+      }
+
       executeTransaction('Tunai');
-      alert('Pembayaran Tunai Berhasil!\nKembalian: Rp ' + (cash - total).toLocaleString('id-ID'));
       closePaymentModal();
       clearCart();
     }
 
-    function saveQrisUrl() {
-      const url = document.getElementById('qrisUrlInput').value.trim();
-      if (url) {
-        savedQrisUrl = url;
-        localStorage.setItem('warkop_qris_url', url);
-        document.getElementById('qrisDisplayImg').src = url;
-        alert('Link QRIS warkop berhasil disimpan!');
-      }
-    }
-
     function confirmNonCashPayment(methodName) {
+      if (confirm(`Pembayaran via ${methodName} Berhasil!\n\nApakah mau cetak nota?`)) {
+        printThermalReceipt(methodName);
+      }
       executeTransaction(methodName);
-      alert(`Pembayaran via ${methodName} Berhasil!`);
       closePaymentModal();
       clearCart();
     }
 
     function confirmTransferPayment() {
       const bank = document.getElementById('transferBankSelect').value;
-      executeTransaction(`Transfer (${bank})`);
-      alert(`Pembayaran Transfer ${bank} Berhasil Dikonfirmasi!`);
+      const methodLabel = `Transfer (${bank})`;
+      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\n\nApakah mau cetak nota?`)) {
+        printThermalReceipt(methodLabel);
+      }
+      executeTransaction(methodLabel);
       closePaymentModal();
       clearCart();
     }
@@ -1014,20 +704,24 @@
     function confirmDebitPayment() {
       const ref = document.getElementById('debitRefInput').value.trim();
       const methodLabel = ref ? `Debit (Reff: ${ref})` : 'Debit EDC';
+      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\n\nApakah mau cetak nota?`)) {
+        printThermalReceipt(methodLabel);
+      }
       executeTransaction(methodLabel);
-      alert('Pembayaran Debit Berhasil Dikonfirmasi!');
       closePaymentModal();
       clearCart();
     }
 
     function executeTransaction(method) {
       const now = new Date();
+      const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      
       cart.forEach(item => {
         const prod = products.find(p => p.id === item.id);
         if (prod) prod.stock -= item.qty;
 
-        dailyTransactions.push({
-          Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        monthlyTransactions.push({
+          Tanggal: formattedDate,
           Menu: item.name,
           Kategori: item.category,
           Harga: item.price,
@@ -1038,7 +732,7 @@
       });
 
       saveProducts();
-      localStorage.setItem('warkop_daily_tx', JSON.stringify(dailyTransactions));
+      localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
     }
 
     function clearCart() {
@@ -1048,7 +742,6 @@
       updateCart();
     }
 
-    /* Modal Pengeluaran */
     function openExpenseModal() {
       renderExpenseTable();
       document.getElementById('expenseModal').style.display = 'flex';
@@ -1066,22 +759,24 @@
       if (!name || isNaN(amount) || amount <= 0) return;
 
       const now = new Date();
-      dailyExpenses.push({
+      const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      monthlyExpenses.push({
         id: Date.now(),
-        Waktu: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        Tanggal: formattedDate,
         Nama: name,
         Nominal: amount
       });
 
-      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       document.getElementById('expenseName').value = '';
       document.getElementById('expenseAmount').value = '';
       renderExpenseTable();
     }
 
     function deleteExpense(id) {
-      dailyExpenses = dailyExpenses.filter(exp => exp.id !== id);
-      localStorage.setItem('warkop_daily_exp', JSON.stringify(dailyExpenses));
+      monthlyExpenses = monthlyExpenses.filter(exp => exp.id !== id);
+      localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       renderExpenseTable();
     }
 
@@ -1090,14 +785,14 @@
       tbody.innerHTML = '';
       let totalExp = 0;
 
-      if (dailyExpenses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada pengeluaran hari ini</td></tr>';
+      if (monthlyExpenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada catatan pengeluaran bulan ini</td></tr>';
       } else {
-        dailyExpenses.forEach(exp => {
+        monthlyExpenses.forEach(exp => {
           totalExp += exp.Nominal;
           tbody.innerHTML += `
             <tr>
-              <td>${exp.Waktu}</td>
+              <td>${exp.Tanggal}</td>
               <td>${exp.Nama}</td>
               <td>Rp ${exp.Nominal.toLocaleString('id-ID')}</td>
               <td>
@@ -1111,22 +806,21 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
-    /* Modal Riwayat & Laba Rugi */
     function openHistoryModal() {
       const tbody = document.getElementById('historyTableBody');
       tbody.innerHTML = '';
 
       let totalOmset = 0;
-      let totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+      let totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
 
-      if (dailyTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi hari ini</td></tr>';
+      if (monthlyTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data transaksi bulan ini</td></tr>';
       } else {
-        dailyTransactions.forEach(tx => {
+        monthlyTransactions.forEach(tx => {
           totalOmset += tx.Total;
           tbody.innerHTML += `
             <tr>
-              <td>${tx.Waktu}</td>
+              <td>${tx.Tanggal}</td>
               <td>${tx.Menu}</td>
               <td>${tx.Qty}</td>
               <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
@@ -1148,28 +842,176 @@
       document.getElementById('historyModal').style.display = 'none';
     }
 
-    function resetDailyData() {
-      if (confirm('Yakin ingin reset riwayat harian? Semua transaksi & pengeluaran hari ini akan dikosongkan.')) {
-        dailyTransactions = [];
-        dailyExpenses = [];
-        localStorage.removeItem('warkop_daily_tx');
-        localStorage.removeItem('warkop_daily_exp');
+    function resetMonthlyData() {
+      if (confirm('Yakin ingin Tutup Buku Bulan Ini? Seluruh transaksi dan catatan pengeluaran bulanan akan di-reset.')) {
+        monthlyTransactions = [];
+        monthlyExpenses = [];
+        localStorage.removeItem('warkop_monthly_tx');
+        localStorage.removeItem('warkop_monthly_exp');
         openHistoryModal();
-        alert('Tutup buku berhasil. Data harian telah dibersihkan.');
+        alert('Tutup buku bulanan berhasil! Data bulan ini telah dibersihkan.');
       }
     }
 
-    /* Export Excel */
-    function exportDailyRecapExcel() {
-      if (dailyTransactions.length === 0 && dailyExpenses.length === 0) {
-        alert('Belum ada data transaksi atau pengeluaran hari ini!');
+    function populateRestockSelect() {
+      const select = document.getElementById('restockProductSelect');
+      select.innerHTML = '';
+      products.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`;
+      });
+    }
+
+    function submitRestock(e) {
+      e.preventDefault();
+      const prodId = parseInt(document.getElementById('restockProductSelect').value);
+      const qtyAdd = parseInt(document.getElementById('restockQtyInput').value);
+      const note = document.getElementById('restockNoteInput').value.trim();
+
+      if (isNaN(qtyAdd) || qtyAdd <= 0 || !note) {
+        alert('Mohon isi jumlah penambahan stok dan keterangan!');
+        return;
+      }
+
+      const product = products.find(p => p.id === prodId);
+      if (product) {
+        product.stock += qtyAdd;
+        saveProducts();
+
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        restockLogs.unshift({
+          Waktu: dateStr,
+          Menu: product.name,
+          QtyTambahan: qtyAdd,
+          Keterangan: note
+        });
+
+        localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
+        alert(`Stok ${product.name} berhasil ditambah +${qtyAdd}!`);
+        renderAdminStockTable();
+        populateRestockSelect();
+        document.getElementById('restockQtyInput').value = '';
+        document.getElementById('restockNoteInput').value = '';
+      }
+    }
+
+    function saveQrisUrl() {
+      const url = document.getElementById('qrisUrlInput').value.trim();
+      if (url) {
+        savedQrisUrl = url;
+        localStorage.setItem('warkop_qris_url', url);
+        alert('Link QRIS warkop berhasil disimpan!');
+      }
+    }
+
+    function renderAdminStockTable() {
+      const tbody = document.getElementById('adminStockTableBody');
+      tbody.innerHTML = '';
+      products.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td style="text-transform:capitalize;">${p.category}</td>
+            <td>
+              <input type="number" style="width:90px; padding:4px;" value="${p.price}" onchange="updatePriceDirect(${p.id}, this.value)">
+            </td>
+            <td>
+              <input type="number" style="width:70px; padding:4px; text-align:center;" value="${p.stock}" onchange="updateStockDirect(${p.id}, this.value)">
+            </td>
+            <td>
+              <button onclick="deleteProduct(${p.id})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function updateStockDirect(id, newStockVal) {
+      const val = parseInt(newStockVal);
+      if (isNaN(val) || val < 0) return;
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.stock = val;
+        saveProducts();
+        populateRestockSelect();
+      }
+    }
+
+    function updatePriceDirect(id, newPriceVal) {
+      const val = parseFloat(newPriceVal);
+      if (isNaN(val) || val < 0) return;
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.price = val;
+        saveProducts();
+      }
+    }
+
+    function addNewProduct(e) {
+      e.preventDefault();
+      const name = document.getElementById('newName').value.trim();
+      const price = parseFloat(document.getElementById('newPrice').value);
+      const category = document.getElementById('newCategory').value;
+      const stock = parseInt(document.getElementById('newStock').value);
+
+      const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+      products.push({ id: newId, name, price, category, stock });
+      
+      saveProducts();
+      renderAdminStockTable();
+      populateRestockSelect();
+
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newStock').value = '';
+    }
+
+    function deleteProduct(id) {
+      if (confirm('Yakin ingin menghapus menu ini?')) {
+        products = products.filter(p => p.id !== id);
+        saveProducts();
+        renderAdminStockTable();
+        populateRestockSelect();
+      }
+    }
+
+    function openRestockLogModal() {
+      const tbody = document.getElementById('restockLogTableBody');
+      tbody.innerHTML = '';
+
+      if (restockLogs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat penambahan stok</td></tr>';
+      } else {
+        restockLogs.forEach(log => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${log.Waktu}</td>
+              <td><strong>${log.Menu}</strong></td>
+              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
+              <td>${log.Keterangan}</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.getElementById('restockLogModal').style.display = 'flex';
+    }
+
+    function closeRestockLogModal() {
+      document.getElementById('restockLogModal').style.display = 'none';
+    }
+
+    function exportMonthlyRecapExcel() {
+      if (monthlyTransactions.length === 0 && monthlyExpenses.length === 0) {
+        alert('Belum ada data transaksi atau pengeluaran bulan ini!');
         return;
       }
 
       const menuSummary = {};
       let totalOmset = 0;
 
-      dailyTransactions.forEach(tx => {
+      monthlyTransactions.forEach(tx => {
         if (!menuSummary[tx.Menu]) {
           menuSummary[tx.Menu] = { Kategori: tx.Kategori, Harga: tx.Harga, Qty: 0, Total: 0 };
         }
@@ -1178,14 +1020,14 @@
         totalOmset += tx.Total;
       });
 
-      const totalExpense = dailyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
+      const totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
       const netProfit = totalOmset - totalExpense;
 
       const excelData = [
-        ["LAPORAN REKAP HARIAN WARKOP"],
-        ["Tanggal:", new Date().toLocaleDateString('id-ID')],
+        ["LAPORAN REKAP BULANAN WARKOP"],
+        ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
-        ["--- RINGKASAN PENJUALAN ---"],
+        ["--- RINGKASAN PENJUALAN BULANAN ---"],
         ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
       ];
 
@@ -1193,37 +1035,37 @@
       for (const [menuName, val] of Object.entries(menuSummary)) {
         excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
       }
-      excelData.push(["", "TOTAL OMSET PENJUALAN", "", "", "", totalOmset]);
+      excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
       excelData.push([""]);
 
-      excelData.push(["--- RINGKASAN PENGELUARAN ---"]);
-      excelData.push(["No", "Jam", "Keterangan Pengeluaran", "", "", "Nominal"]);
+      excelData.push(["--- RINGKASAN PENGELUARAN BULANAN ---"]);
+      excelData.push(["No", "Tanggal", "Keterangan Pengeluaran", "", "", "Nominal"]);
       
       let noExp = 1;
-      dailyExpenses.forEach(exp => {
-        excelData.push([noExp++, exp.Waktu, exp.Nama, "", "", exp.Nominal]);
+      monthlyExpenses.forEach(exp => {
+        excelData.push([noExp++, exp.Tanggal, exp.Nama, "", "", exp.Nominal]);
       });
-      excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
+      excelData.push(["", "TOTAL PENGELUARAN BULANAN", "", "", "", totalExpense]);
       excelData.push([""]);
 
       excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
-      excelData.push(["Waktu", "Nama Menu", "Tambahan Stok", "Keterangan"]);
+      excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
 
       restockLogs.forEach(log => {
         excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
       });
       excelData.push([""]);
 
-      excelData.push(["--- RINGKASAN LABA RUGI ---"]);
+      excelData.push(["--- RINGKASAN LABA RUGI BULANAN ---"]);
       excelData.push(["Total Omset Penjualan", totalOmset]);
       excelData.push(["Total Pengeluaran Operasional", totalExpense]);
-      excelData.push(["LABA BERSIH HARIAN", netProfit]);
+      excelData.push(["LABA BERSIH BULANAN", netProfit]);
 
       const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Rekap Harian");
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan");
 
-      const fileName = `Rekap_Lengkap_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Rekap_Bulanan_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
