@@ -8,23 +8,23 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f8fafc; color: #1e293b; height: 100vh; display: flex; overflow: hidden; }
-    .container { display: flex; width: 100%; height: 100%; }
+    .container { display: flex; width: 100%; height: 100%; overflow: hidden; }
 
-    .menu-panel { flex: 2; padding: 20px; overflow-y: auto; border-right: 1px solid #e2e8f0; }
+    .menu-panel { flex: 2; padding: 20px; overflow-y: auto; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .header-title { font-size: 24px; font-weight: 700; color: #0f172a; }
     .btn-admin-login { background: #0f172a; color: #ffffff; padding: 8px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
     .search-box { margin-bottom: 15px; }
-    .categories { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .categories { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
     .cat-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 20px; background: #ffffff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
     .cat-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
 
-    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding-bottom: 20px; }
     .card-item { background: #ffffff; border-radius: 10px; padding: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.1s, border-color 0.2s; }
     .card-item:hover { transform: translateY(-2px); border-color: #2563eb; }
     .card-item.out-of-stock { opacity: 0.6; cursor: not-allowed; border-color: #fca5a5; background-color: #fef2f2; }
-    .card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; line-height: 1.2; }
     .card-price { color: #2563eb; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
 
     .stock-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; font-weight: 600; }
@@ -32,7 +32,7 @@
     .stock-badge.low { background: #fef9c3; color: #a16207; }
     .stock-badge.empty { background: #fee2e2; color: #b91c1c; }
 
-    .cart-panel { flex: 1; min-width: 320px; max-width: 400px; background: #ffffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
+    .cart-panel { flex: 1; min-width: 320px; max-width: 380px; background: #ffffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
     .cart-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
     .cart-items { flex: 1; overflow-y: auto; margin-bottom: 12px; }
     .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; }
@@ -75,35 +75,29 @@
     .stat-card-title { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
     .stat-card-value { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 2px; }
 
-    /* ============================================================
-       RESPONSIVE DESIGN KHUSUS TABLET / IPAD (768px - 1024px)
-    ============================================================ */
+    /* LAYOUT OPTIMIZATION TABLET & MOBILE */
     @media (max-width: 1024px) {
-      .menu-panel { padding: 12px; }
-      .cart-panel { min-width: 280px; max-width: 320px; padding: 12px; }
+      .menu-panel { padding: 14px; }
+      .cart-panel { min-width: 280px; max-width: 320px; padding: 14px; }
       .header-title { font-size: 18px; }
       .btn-admin-login { padding: 6px 10px; font-size: 11px; }
       .cat-btn { padding: 6px 10px; font-size: 11px; border-radius: 14px; }
       
-      .grid-menu { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
-      .card-item { padding: 8px; border-radius: 8px; }
-      .card-title { font-size: 12px; margin-bottom: 3px; line-height: 1.2; }
-      .card-price { font-size: 12px; margin-bottom: 4px; }
-      .stock-badge { font-size: 10px; padding: 2px 5px; }
+      .grid-menu { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+      .card-item { padding: 10px; }
+      .card-title { font-size: 13px; }
+      .card-price { font-size: 12px; }
 
       .cart-title { font-size: 15px; margin-bottom: 8px; }
-      .cart-item-name { font-size: 12px; }
-      .cart-item-sub { font-size: 10px; }
-      .row-summary.total { font-size: 15px; margin-bottom: 8px; }
       .btn-action { padding: 8px; font-size: 12px; margin-bottom: 5px; }
       .btn-pay-main { font-size: 13px; padding: 10px; }
     }
 
     @media (max-width: 768px) {
-      body { overflow-y: auto; height: auto; }
-      .container { flex-direction: column; height: auto; }
-      .menu-panel { flex: none; border-right: none; border-bottom: 2px solid #e2e8f0; height: 60vh; }
-      .cart-panel { min-width: 100%; max-width: 100%; height: 40vh; box-shadow: none; }
+      body { overflow: auto; }
+      .container { flex-direction: column; height: 100vh; }
+      .menu-panel { flex: 1; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
+      .cart-panel { flex: none; height: 320px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
     }
 
     #receiptPrintArea { display: none; }
@@ -112,16 +106,9 @@
       #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
       #receiptPrintArea {
         display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 58mm;
-        padding: 4px 2px;
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 10px;
-        color: #000;
-        background: #fff;
-        line-height: 1.2;
+        position: absolute; left: 0; top: 0; width: 58mm;
+        padding: 4px 2px; font-family: 'Courier New', Courier, monospace;
+        font-size: 10px; color: #000; background: #fff; line-height: 1.2;
       }
       .receipt-header, .receipt-footer { text-align: center; }
       .receipt-divider { border-top: 1px dashed #000; margin: 5px 0; }
@@ -546,16 +533,33 @@
       { id: 3, name: 'Keju Parut', unit: 'gram', stock: 1000 },
       { id: 4, name: 'Cokelat Lumer / Meses', unit: 'gram', stock: 1500 },
       { id: 5, name: 'Susu Kental Manis', unit: 'ml', stock: 2000 },
-      { id: 6, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 }
+      { id: 6, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 },
+      { id: 7, name: 'Indomie Goreng Pack', unit: 'pcs', stock: 50 },
+      { id: 8, name: 'Telur Ayam', unit: 'pcs', stock: 100 }
     ];
 
-    // Data Default Menu dengan Resep Bawaan
+    // Data Lengkap 20 Default Menu Warkop
     const defaultProducts = [
       { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20, recipe: [{ rawId: 2, qty: 50 }, { rawId: 3, qty: 15 }, { rawId: 4, qty: 15 }, { rawId: 5, qty: 10 }] },
       { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15, recipe: [{ rawId: 2, qty: 50 }, { rawId: 5, qty: 15 }] },
-      { id: 3, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 0, recipe: [{ rawId: 6, qty: 15 }, { rawId: 5, qty: 30 }] },
-      { id: 4, name: 'Es Galon Spesial', price: 5000, category: 'minuman', stock: 0, recipe: [{ rawId: 1, qty: 1 }] },
-      { id: 5, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] }
+      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30, recipe: [{ rawId: 7, qty: 1 }, { rawId: 8, qty: 1 }] },
+      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50, recipe: [{ rawId: 6, qty: 15 }, { rawId: 5, qty: 30 }] },
+      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40, recipe: [{ rawId: 6, qty: 15 }] },
+      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] },
+      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25, recipe: [] },
+      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20, recipe: [{ rawId: 3, qty: 20 }, { rawId: 4, qty: 20 }] },
+      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15, recipe: [] },
+      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20, recipe: [{ rawId: 3, qty: 20 }, { rawId: 5, qty: 15 }] },
+      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15, recipe: [{ rawId: 4, qty: 20 }] },
+      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25, recipe: [] },
+      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20, recipe: [] },
+      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30, recipe: [] },
+      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25, recipe: [] },
+      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35, recipe: [{ rawId: 6, qty: 15 }] },
+      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30, recipe: [{ rawId: 5, qty: 20 }] },
+      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25, recipe: [{ rawId: 5, qty: 25 }] },
+      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30, recipe: [{ rawId: 5, qty: 40 }] },
+      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20, recipe: [{ rawId: 5, qty: 30 }, { rawId: 8, qty: 1 }] }
     ];
 
     let savedRaw = JSON.parse(localStorage.getItem('warkop_raw_materials'));
