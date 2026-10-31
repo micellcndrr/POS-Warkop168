@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Warkop - POS System</title>
+  <title>Kasir Warkop Pancong 168 - POS System</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -51,7 +51,7 @@
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: #ffffff; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; }
+    .modal-content { background: #ffffff; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow-y: auto; }
     
     .payment-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
     .pay-tab-btn { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-weight: 600; font-size: 13px; cursor: pointer; text-align: center; }
@@ -66,14 +66,31 @@
 
     .input-field { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
 
+    .admin-section-box { margin-top: 15px; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .admin-section-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #0f172a; display: flex; align-items: center; justify-content: space-between; }
+
+    /* Layout Struk Thermal 58mm Detail */
     #receiptPrintArea { display: none; }
     @media print {
       body * { visibility: hidden; }
       #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
-      #receiptPrintArea { display: block !important; position: absolute; left: 0; top: 0; width: 58mm; padding: 6px 2px; font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; background: #fff; }
+      #receiptPrintArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 58mm;
+        padding: 4px 2px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 10px;
+        color: #000;
+        background: #fff;
+        line-height: 1.2;
+      }
       .receipt-header, .receipt-footer { text-align: center; }
-      .receipt-divider { border-top: 1px dashed #000; margin: 6px 0; }
-      .receipt-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+      .receipt-divider { border-top: 1px dashed #000; margin: 5px 0; }
+      .receipt-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+      .receipt-item-title { font-weight: bold; margin-top: 3px; }
     }
   </style>
 </head>
@@ -82,7 +99,7 @@
   <div class="container">
     <div class="menu-panel">
       <div class="top-header">
-        <h1 class="header-title">Kasir Warkop</h1>
+        <h1 class="header-title">Warkop Pancong 168</h1>
         <button class="btn-admin-login" onclick="loginAdmin()">🔑 Dashboard Owner</button>
       </div>
       
@@ -270,17 +287,66 @@
 
   <!-- Modal Admin Dashboard -->
   <div id="adminModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 800px; height: 90vh;">
+    <div class="modal-content" style="max-width: 850px; height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
-        <h3>🔑 Dashboard Owner (Manajemen Stok & Sistem)</h3>
+        <h3>🔑 Dashboard Owner (Manajemen Stok, Bahan Baku & Resep)</h3>
         <div>
-          <button onclick="resetDefaultMenu()" style="background:#d97706; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; margin-right:5px;">🔄 Reset Menu Default</button>
+          <button onclick="resetDefaultMenu()" style="background:#d97706; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; margin-right:5px;">🔄 Reset Sistem Default</button>
           <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
         </div>
       </div>
 
-      <div style="margin-top:12px; background:#fef3c7; padding:12px; border-radius:8px; border:1px solid #fde68a;">
-        <h4 style="margin-bottom:8px; color:#92400e;">📥 Input Barang Masuk (Restok)</h4>
+      <!-- Section 1: Manajemen Bahan Baku -->
+      <div class="admin-section-box" style="background:#eff6ff; border-color:#bfdbfe;">
+        <div class="admin-section-title" style="color:#1e40af;">
+          <span>📦 Manajemen Stok Bahan Baku (Raw Materials)</span>
+        </div>
+        <form style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px;" onsubmit="addNewRawMaterial(event)">
+          <input type="text" id="rawName" class="input-field" placeholder="Nama Bahan Baku (ex: Tepung Terigu)" required style="margin:0;">
+          <input type="text" id="rawUnit" class="input-field" placeholder="Satuan (gram / ml / pcs)" required style="margin:0;">
+          <input type="number" id="rawStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
+          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Tambah Bahan</button>
+        </form>
+
+        <div style="max-height:160px; overflow-y:auto; margin-top:10px;">
+          <table class="custom-table" style="background:#fff;">
+            <thead>
+              <tr>
+                <th>Bahan Baku</th>
+                <th>Satuan</th>
+                <th>Sisa Stok</th>
+                <th>Tambah Stok</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="rawMaterialTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 2: Atur Resep / Komposisi Bahan Per Menu -->
+      <div class="admin-section-box" style="background:#fefce8; border-color:#fef08a;">
+        <div class="admin-section-title" style="color:#854d0e;">
+          <span>🧪 Hubungkan Menu ke Bahan Baku (Atur Resep)</span>
+        </div>
+        <form style="display:grid; grid-template-columns: 2fr 2fr 1fr auto; gap:8px;" onsubmit="addRecipeToMenu(event)">
+          <select id="recipeProductSelect" class="input-field" style="margin:0;" required onchange="renderCurrentProductRecipe()"></select>
+          <select id="recipeRawSelect" class="input-field" style="margin:0;" required></select>
+          <input type="number" id="recipeQtyInput" class="input-field" placeholder="Takaran" required style="margin:0;">
+          <button type="submit" style="background:#ca8a04; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Ikat Bahan</button>
+        </form>
+
+        <div style="margin-top:10px; background:#fff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">
+          <strong style="font-size:13px;">Komposisi Bahan Saat Ini untuk Menu yang Dipilih:</strong>
+          <div id="recipeDisplayList" style="margin-top:6px; font-size:13px; color:#475569;">Pilih menu di atas untuk melihat resep.</div>
+        </div>
+      </div>
+
+      <!-- Section 3: Restok Menu Langsung -->
+      <div class="admin-section-box" style="background:#fef3c7; border-color:#fde68a;">
+        <div class="admin-section-title" style="color:#92400e;">
+          <span>📥 Input Barang Masuk Menu Jadi (Restok Langsung)</span>
+        </div>
         <form style="display:grid; grid-template-columns: 2fr 1fr 2fr auto; gap:8px;" onsubmit="submitRestock(event)">
           <select id="restockProductSelect" class="input-field" style="margin:0;" required></select>
           <input type="number" id="restockQtyInput" class="input-field" placeholder="+Qty" min="1" required style="margin:0;">
@@ -289,8 +355,11 @@
         </form>
       </div>
 
-      <div style="margin-top:12px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-        <h4 style="margin-bottom:8px;">+ Buat Menu Baru</h4>
+      <!-- Section 4: Buat Menu Baru -->
+      <div class="admin-section-box">
+        <div class="admin-section-title">
+          <span>+ Buat Menu Baru</span>
+        </div>
         <form style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px;" onsubmit="addNewProduct(event)">
           <input type="text" id="newName" class="input-field" placeholder="Nama Menu" required style="margin:0;">
           <input type="number" id="newPrice" class="input-field" placeholder="Harga (Rp)" required style="margin:0;">
@@ -313,12 +382,14 @@
         </form>
       </div>
 
+      <!-- Link QRIS -->
       <div style="margin-top:12px; background:#f0f9ff; padding:10px; border-radius:8px; border:1px solid #bae6fd; display:flex; gap:8px; align-items:center;">
         <span style="font-size:13px; font-weight:600; white-space:nowrap;">Link URL QRIS:</span>
         <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS" style="margin:0; font-size:12px;">
         <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px; white-space:nowrap;">Simpan QRIS</button>
       </div>
 
+      <!-- Tabel Kelola Menu -->
       <div style="overflow-y:auto; flex:1; margin-top:12px;">
         <h4 style="margin-bottom:8px;">Kelola Harga, Stok & Hapus Menu</h4>
         <table class="custom-table">
@@ -368,28 +439,43 @@
   <div id="receiptPrintArea"></div>
 
   <script>
-    const defaultProducts = [
-      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20 },
-      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15 },
-      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30 },
-      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50 },
-      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40 },
-      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60 },
-      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25 },
-      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20 },
-      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15 },
-      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20 },
-      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15 },
-      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25 },
-      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20 },
-      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30 },
-      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25 },
-      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35 },
-      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30 },
-      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25 },
-      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30 },
-      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20 }
+    // Data Default Bahan Baku Initial
+    const defaultRawMaterials = [
+      { id: 1, name: 'Tepung Terigu Pancong', unit: 'gram', stock: 5000 },
+      { id: 2, name: 'Keju Parut', unit: 'gram', stock: 1000 },
+      { id: 3, name: 'Cokelat Lumer / Meses', unit: 'gram', stock: 1500 },
+      { id: 4, name: 'Susu Kental Manis', unit: 'ml', stock: 2000 },
+      { id: 5, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 },
+      { id: 6, name: 'Indomie Goreng Pack', unit: 'pcs', stock: 50 },
+      { id: 7, name: 'Telur Ayam', unit: 'pcs', stock: 100 }
     ];
+
+    // Data Default Menu dengan Resep Bawaan
+    const defaultProducts = [
+      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20, recipe: [{ rawId: 1, qty: 50 }, { rawId: 2, qty: 15 }, { rawId: 3, qty: 15 }, { rawId: 4, qty: 10 }] },
+      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15, recipe: [{ rawId: 1, qty: 50 }, { rawId: 4, qty: 15 }] },
+      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30, recipe: [{ rawId: 6, qty: 1 }, { rawId: 7, qty: 1 }] },
+      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50, recipe: [{ rawId: 5, qty: 15 }, { rawId: 4, qty: 30 }] },
+      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40, recipe: [{ rawId: 5, qty: 15 }] },
+      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] },
+      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25, recipe: [] },
+      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20, recipe: [{ rawId: 2, qty: 20 }, { rawId: 3, qty: 20 }] },
+      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15, recipe: [] },
+      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20, recipe: [{ rawId: 2, qty: 20 }, { rawId: 4, qty: 15 }] },
+      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15, recipe: [{ rawId: 3, qty: 20 }] },
+      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25, recipe: [] },
+      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20, recipe: [] },
+      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30, recipe: [] },
+      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25, recipe: [] },
+      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35, recipe: [{ rawId: 5, qty: 15 }] },
+      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30, recipe: [{ rawId: 4, qty: 20 }] },
+      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25, recipe: [{ rawId: 4, qty: 25 }] },
+      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30, recipe: [{ rawId: 4, qty: 40 }] },
+      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20, recipe: [{ rawId: 4, qty: 30 }, { rawId: 7, qty: 1 }] }
+    ];
+
+    let savedRaw = JSON.parse(localStorage.getItem('warkop_raw_materials'));
+    let rawMaterials = (savedRaw && savedRaw.length > 0) ? savedRaw : defaultRawMaterials;
 
     let savedProducts = JSON.parse(localStorage.getItem('warkop_products'));
     let products = (savedProducts && savedProducts.length > 0) ? savedProducts : defaultProducts;
@@ -404,17 +490,32 @@
     const adminPin = '4M112208';
 
     function resetDefaultMenu() {
-      if (confirm('Yakin ingin mereset seluruh daftar menu ke versi bawaan terbaru?')) {
+      if (confirm('Yakin ingin mereset seluruh daftar menu & bahan baku ke versi bawaan?')) {
         localStorage.removeItem('warkop_products');
+        localStorage.removeItem('warkop_raw_materials');
         location.reload();
       }
+    }
+
+    function saveRawMaterials() {
+      localStorage.setItem('warkop_raw_materials', JSON.stringify(rawMaterials));
+      renderRawMaterialTable();
+      populateRecipeRawSelect();
+    }
+
+    function saveProducts() {
+      localStorage.setItem('warkop_products', JSON.stringify(products));
+      renderMenuFilter();
     }
 
     function loginAdmin() {
       const inputPin = prompt('Masukkan PIN Owner / Admin:');
       if (inputPin === adminPin) {
         renderAdminStockTable();
+        renderRawMaterialTable();
         populateRestockSelect();
+        populateRecipeProductSelect();
+        populateRecipeRawSelect();
         document.getElementById('qrisUrlInput').value = savedQrisUrl;
         document.getElementById('adminModal').style.display = 'flex';
       } else if (inputPin !== null) {
@@ -425,11 +526,6 @@
     function logoutAdmin() {
       document.getElementById('adminModal').style.display = 'none';
       alert('Sesi Admin Berhasil Dikunci Kembali.');
-    }
-
-    function saveProducts() {
-      localStorage.setItem('warkop_products', JSON.stringify(products));
-      renderMenuFilter();
     }
 
     function renderMenu(items) {
@@ -489,7 +585,7 @@
       const currentCartQty = existing ? existing.qty : 0;
 
       if (currentCartQty + 1 > product.stock) {
-        alert(`Stok ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+        alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
         return;
       }
 
@@ -507,7 +603,7 @@
 
       if (item) {
         if (delta > 0 && item.qty + 1 > product.stock) {
-          alert(`Stok ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+          alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
           return;
         }
         item.qty += delta;
@@ -543,9 +639,33 @@
       document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
+    // Pengecekan Ketersediaan Bahan Baku Sebelum Transaksi Ditutup
+    function checkRawMaterialsAvailability() {
+      for (const cartItem of cart) {
+        const prod = products.find(p => p.id === cartItem.id);
+        if (prod && prod.recipe && prod.recipe.length > 0) {
+          for (const r of prod.recipe) {
+            const raw = rawMaterials.find(m => m.id === r.rawId);
+            if (raw) {
+              const neededTotal = r.qty * cartItem.qty;
+              if (raw.stock < neededTotal) {
+                alert(`Bahan baku "${raw.name}" kurang! Dibutuhkan: ${neededTotal} ${raw.unit}, Tersedia: ${raw.stock} ${raw.unit} untuk membuat pesanan "${prod.name}".`);
+                return false;
+              }
+            }
+          }
+        }
+      }
+      return true;
+    }
+
     function openPaymentModal() {
       if (cart.length === 0) {
         alert('Keranjang masih kosong!');
+        return;
+      }
+
+      if (!checkRawMaterialsAvailability()) {
         return;
       }
 
@@ -556,7 +676,7 @@
       if (savedQrisUrl) {
         qrisImg.src = savedQrisUrl;
       } else {
-        const qrData = `00020101021126580014ID.CO.WARKOP.WWW0118936009143000000000520458125303360540${total}5802ID5912WARKOP_KASIR6007JAKARTA6304`;
+        const qrData = `00020101021126580014ID.CO.WARKOP.WWW0118936009143000000000520458125303360540${total}5802ID5912WARKOP_PANCONG_1686007JAKARTA6304`;
         qrisImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrData)}`;
       }
 
@@ -610,51 +730,96 @@
       const now = new Date();
       const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const receiptNo = 'P168-' + Math.floor(100000 + Math.random() * 900000);
+      
+      const totalItemCount = cart.reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
       let itemsHtml = '';
       cart.forEach(item => {
-        const subtotal = item.price * item.qty;
+        const itemSubtotal = item.price * item.qty;
         itemsHtml += `
-          <div style="font-weight:bold;">${item.name}</div>
+          <div class="receipt-item-title">${item.name}</div>
           <div class="receipt-row">
             <span>${item.qty} x ${item.price.toLocaleString('id-ID')}</span>
-            <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
+            <span>Rp ${itemSubtotal.toLocaleString('id-ID')}</span>
           </div>
         `;
       });
 
       printArea.innerHTML = `
         <div class="receipt-header">
-          <h2 style="font-size:14px; margin-bottom:2px;">WARKOP KASIR</h2>
-          <p style="font-size:10px;">Struk Pembayaran Warkop</p>
-          <p style="font-size:10px;">${dateStr} - ${timeStr}</p>
+          <h2 style="font-size:13px; font-weight:bold; margin-bottom:2px;">WARKOP PANCONG 168</h2>
+          <p style="font-size:9px;">Kopi, Pancong Lumer & Hangout</p>
+          <p style="font-size:9px;">Jl. Raya Depok No. 168</p>
+          <p style="font-size:9px;">Telp/WA: 0812-3456-7890</p>
         </div>
+        
+        <div class="receipt-divider"></div>
+        
+        <div class="receipt-row">
+          <span>No. Nota:</span>
+          <span>${receiptNo}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Tanggal :</span>
+          <span>${dateStr}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Waktu   :</span>
+          <span>${timeStr}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Kasir   :</span>
+          <span>Kasir Warkop</span>
+        </div>
+
         <div class="receipt-divider"></div>
         ${itemsHtml}
         <div class="receipt-divider"></div>
-        <div class="receipt-row" style="font-weight:bold;">
-          <span>TOTAL</span>
-          <span>Rp ${total.toLocaleString('id-ID')}</span>
+
+        <div class="receipt-row">
+          <span>Total Qty</span>
+          <span>${totalItemCount} Item</span>
         </div>
         <div class="receipt-row">
-          <span>Metode</span>
+          <span>Subtotal</span>
+          <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Diskon</span>
+          <span>Rp 0</span>
+        </div>
+        
+        <div class="receipt-divider"></div>
+        
+        <div class="receipt-row" style="font-weight:bold; font-size:11px;">
+          <span>TOTAL</span>
+          <span>Rp ${subtotal.toLocaleString('id-ID')}</span>
+        </div>
+        <div class="receipt-row">
+          <span>Metode Bayar</span>
           <span>${method}</span>
         </div>
         ${method === 'Tunai' ? `
         <div class="receipt-row">
-          <span>Bayar</span>
+          <span>Uang Tunai</span>
           <span>Rp ${cashAmount.toLocaleString('id-ID')}</span>
         </div>
         <div class="receipt-row">
-          <span>Kembali</span>
+          <span>Kembalian</span>
           <span>Rp ${changeAmount.toLocaleString('id-ID')}</span>
         </div>
         ` : ''}
+
         <div class="receipt-divider"></div>
+
         <div class="receipt-footer">
-          <p>Terima Kasih!</p>
-          <p>Selamat Menikmati 🙏</p>
+          <p style="font-weight:bold; margin-bottom:2px;">Wi-Fi: Pancong168_Guest</p>
+          <p style="margin-bottom:4px;">Pass: nongkrong168</p>
+          <p style="font-size:9px;">IG: @warkoppancong168</p>
+          <p style="margin-top:4px;">Terima kasih atas kunjungan Anda!</p>
+          <p>Kritik & Saran: 0812-3456-7890</p>
         </div>
       `;
 
@@ -712,13 +877,28 @@
       clearCart();
     }
 
+    // Eksekusi Transaksi: Pemotongan Stok Menu & Stok Bahan Baku Otomatis
     function executeTransaction(method) {
       const now = new Date();
       const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
       
       cart.forEach(item => {
         const prod = products.find(p => p.id === item.id);
-        if (prod) prod.stock -= item.qty;
+        if (prod) {
+          // Potong Stok Menu
+          prod.stock -= item.qty;
+
+          // Potong Stok Bahan Baku Sesuai Resep
+          if (prod.recipe && prod.recipe.length > 0) {
+            prod.recipe.forEach(r => {
+              const raw = rawMaterials.find(m => m.id === r.rawId);
+              if (raw) {
+                raw.stock -= (r.qty * item.qty);
+                if (raw.stock < 0) raw.stock = 0;
+              }
+            });
+          }
+        }
 
         monthlyTransactions.push({
           Tanggal: formattedDate,
@@ -732,6 +912,7 @@
       });
 
       saveProducts();
+      saveRawMaterials();
       localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
     }
 
@@ -742,6 +923,154 @@
       updateCart();
     }
 
+    /* === FITUR MANAJEMEN BAHAN BAKU & RESEP === */
+    function renderRawMaterialTable() {
+      const tbody = document.getElementById('rawMaterialTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (rawMaterials.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada bahan baku terdaftar</td></tr>';
+        return;
+      }
+
+      rawMaterials.forEach(raw => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${raw.name}</strong></td>
+            <td>${raw.unit}</td>
+            <td><strong style="color:${raw.stock <= 100 ? '#dc2626' : '#15803d'};">${raw.stock}</strong> ${raw.unit}</td>
+            <td>
+              <input type="number" placeholder="+Qty" style="width:70px; padding:3px;" onchange="addRawStockDirect(${raw.id}, this.value); this.value='';">
+            </td>
+            <td>
+              <button onclick="deleteRawMaterial(${raw.id})" style="background:#ef4444; color:#fff; border:none; padding:3px 6px; border-radius:4px; cursor:pointer; font-size:11px;">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function addNewRawMaterial(e) {
+      e.preventDefault();
+      const name = document.getElementById('rawName').value.trim();
+      const unit = document.getElementById('rawUnit').value.trim();
+      const stock = parseInt(document.getElementById('rawStock').value);
+
+      if (!name || !unit || isNaN(stock)) return;
+
+      const newId = rawMaterials.length > 0 ? Math.max(...rawMaterials.map(r => r.id)) + 1 : 1;
+      rawMaterials.push({ id: newId, name, unit, stock });
+
+      saveRawMaterials();
+      document.getElementById('rawName').value = '';
+      document.getElementById('rawUnit').value = '';
+      document.getElementById('rawStock').value = '';
+    }
+
+    function addRawStockDirect(id, addVal) {
+      const val = parseInt(addVal);
+      if (isNaN(val) || val <= 0) return;
+      const raw = rawMaterials.find(r => r.id === id);
+      if (raw) {
+        raw.stock += val;
+        saveRawMaterials();
+      }
+    }
+
+    function deleteRawMaterial(id) {
+      if (confirm('Yakin hapus bahan baku ini? Resep menu terkait juga akan terpengaruh.')) {
+        rawMaterials = rawMaterials.filter(r => r.id !== id);
+        products.forEach(p => {
+          if (p.recipe) {
+            p.recipe = p.recipe.filter(r => r.rawId !== id);
+          }
+        });
+        saveProducts();
+        saveRawMaterials();
+      }
+    }
+
+    function populateRecipeProductSelect() {
+      const select = document.getElementById('recipeProductSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      products.forEach(p => {
+        select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+      renderCurrentProductRecipe();
+    }
+
+    function populateRecipeRawSelect() {
+      const select = document.getElementById('recipeRawSelect');
+      if (!select) return;
+      select.innerHTML = '';
+      rawMaterials.forEach(r => {
+        select.innerHTML += `<option value="${r.id}">${r.name} (${r.unit})</option>`;
+      });
+    }
+
+    function renderCurrentProductRecipe() {
+      const prodId = parseInt(document.getElementById('recipeProductSelect').value);
+      const display = document.getElementById('recipeDisplayList');
+      const prod = products.find(p => p.id === prodId);
+
+      if (!prod || !prod.recipe || prod.recipe.length === 0) {
+        display.innerHTML = '<em style="color:#94a3b8;">Belum ada bahan baku yang diikat ke menu ini.</em>';
+        return;
+      }
+
+      let listHtml = '<ul style="padding-left:18px; margin-top:4px;">';
+      prod.recipe.forEach((r, idx) => {
+        const raw = rawMaterials.find(m => m.id === r.rawId);
+        if (raw) {
+          listHtml += `
+            <li style="margin-bottom:3px;">
+              <strong>${raw.name}</strong>: ${r.qty} ${raw.unit}
+              <button onclick="removeRecipeItem(${prod.id}, ${r.rawId})" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold; margin-left:6px;">[Hapus]</button>
+            </li>
+          `;
+        }
+      });
+      listHtml += '</ul>';
+      display.innerHTML = listHtml;
+    }
+
+    function addRecipeToMenu(e) {
+      e.preventDefault();
+      const prodId = parseInt(document.getElementById('recipeProductSelect').value);
+      const rawId = parseInt(document.getElementById('recipeRawSelect').value);
+      const qty = parseInt(document.getElementById('recipeQtyInput').value);
+
+      if (isNaN(qty) || qty <= 0) return;
+
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        if (!prod.recipe) prod.recipe = [];
+        
+        const existingRecipe = prod.recipe.find(r => r.rawId === rawId);
+        if (existingRecipe) {
+          existingRecipe.qty = qty;
+        } else {
+          prod.recipe.push({ rawId, qty });
+        }
+
+        saveProducts();
+        renderCurrentProductRecipe();
+        document.getElementById('recipeQtyInput').value = '';
+      }
+    }
+
+    function removeRecipeItem(prodId, rawId) {
+      const prod = products.find(p => p.id === prodId);
+      if (prod && prod.recipe) {
+        prod.recipe = prod.recipe.filter(r => r.rawId !== rawId);
+        saveProducts();
+        renderCurrentProductRecipe();
+      }
+    }
+
+    /* === FITUR LAINNYA === */
     function openExpenseModal() {
       renderExpenseTable();
       document.getElementById('expenseModal').style.display = 'flex';
@@ -855,6 +1184,7 @@
 
     function populateRestockSelect() {
       const select = document.getElementById('restockProductSelect');
+      if (!select) return;
       select.innerHTML = '';
       products.forEach(p => {
         select.innerHTML += `<option value="${p.id}">${p.name} (Stok: ${p.stock})</option>`;
@@ -956,11 +1286,12 @@
       const stock = parseInt(document.getElementById('newStock').value);
 
       const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-      products.push({ id: newId, name, price, category, stock });
+      products.push({ id: newId, name, price, category, stock, recipe: [] });
       
       saveProducts();
       renderAdminStockTable();
       populateRestockSelect();
+      populateRecipeProductSelect();
 
       document.getElementById('newName').value = '';
       document.getElementById('newPrice').value = '';
@@ -973,6 +1304,7 @@
         saveProducts();
         renderAdminStockTable();
         populateRestockSelect();
+        populateRecipeProductSelect();
       }
     }
 
@@ -1024,7 +1356,7 @@
       const netProfit = totalOmset - totalExpense;
 
       const excelData = [
-        ["LAPORAN REKAP BULANAN WARKOP"],
+        ["LAPORAN REKAP BULANAN WARKOP PANCONG 168"],
         ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
         ["--- RINGKASAN PENJUALAN BULANAN ---"],
@@ -1036,6 +1368,14 @@
         excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
       }
       excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
+      excelData.push([""]);
+
+      excelData.push(["--- RINGKASAN STOK BAHAN BAKU SAAT INI ---"]);
+      excelData.push(["No", "Nama Bahan Baku", "Satuan", "Sisa Stok"]);
+      let noRaw = 1;
+      rawMaterials.forEach(r => {
+        excelData.push([noRaw++, r.name, r.unit, r.stock]);
+      });
       excelData.push([""]);
 
       excelData.push(["--- RINGKASAN PENGELUARAN BULANAN ---"]);
@@ -1065,7 +1405,7 @@
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan");
 
-      const fileName = `Rekap_Bulanan_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Rekap_Bulanan_Warkop_Pancong_168_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
