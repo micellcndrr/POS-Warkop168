@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Warkop Pancong 168 - POS System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kasir Warkop Pancong 168 - POS & Forecast System</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -20,38 +20,39 @@
     .cat-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 20px; background: #ffffff; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
     .cat-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
 
-    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-    .card-item { background: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.1s, border-color 0.2s; }
+    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .card-item { background: #ffffff; border-radius: 10px; padding: 12px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.1s, border-color 0.2s; }
     .card-item:hover { transform: translateY(-2px); border-color: #2563eb; }
     .card-item.out-of-stock { opacity: 0.6; cursor: not-allowed; border-color: #fca5a5; background-color: #fef2f2; }
-    .card-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-    .card-price { color: #2563eb; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+    .card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .card-price { color: #2563eb; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
 
-    .stock-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: 600; }
+    .stock-badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; display: inline-block; font-weight: 600; }
     .stock-badge.normal { background: #dcfce7; color: #15803d; }
     .stock-badge.low { background: #fef9c3; color: #a16207; }
     .stock-badge.empty { background: #fee2e2; color: #b91c1c; }
 
-    .cart-panel { flex: 1; min-width: 330px; background: #ffffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
-    .cart-title { font-size: 20px; font-weight: 700; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
-    .cart-items { flex: 1; overflow-y: auto; margin-bottom: 15px; }
-    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0; }
-    .cart-item-name { font-size: 14px; font-weight: 600; }
-    .cart-item-sub { font-size: 12px; color: #64748b; }
+    .cart-panel { flex: 1; min-width: 320px; max-width: 400px; background: #ffffff; display: flex; flex-direction: column; padding: 20px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
+    .cart-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+    .cart-items { flex: 1; overflow-y: auto; margin-bottom: 12px; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; }
+    .cart-item-name { font-size: 13px; font-weight: 600; }
+    .cart-item-sub { font-size: 11px; color: #64748b; }
 
-    .qty-controls { display: flex; align-items: center; gap: 8px; }
-    .btn-qty { background: #f1f5f9; border: 1px solid #cbd5e1; width: 26px; height: 26px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    .qty-controls { display: flex; align-items: center; gap: 6px; }
+    .btn-qty { background: #f1f5f9; border: 1px solid #cbd5e1; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
-    .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 15px; }
-    .row-summary.total { font-weight: 700; font-size: 20px; color: #16a34a; margin-bottom: 15px; display: flex; justify-content: space-between; }
-    .btn-action { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
-    .btn-pay-main { background: #16a34a; color: #fff; font-size: 16px; padding: 14px; }
+    .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 12px; }
+    .row-summary.total { font-weight: 700; font-size: 18px; color: #16a34a; margin-bottom: 12px; display: flex; justify-content: space-between; }
+    .btn-action { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
+    .btn-pay-main { background: #16a34a; color: #fff; font-size: 15px; padding: 12px; }
+    .btn-forecast { background: #7c3aed; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
     .btn-history { background: #0284c7; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
-    .modal-content { background: #ffffff; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow-y: auto; }
+    .modal-content { background: #ffffff; padding: 20px; border-radius: 10px; width: 90%; max-width: 650px; max-height: 85vh; display: flex; flex-direction: column; overflow-y: auto; }
     
     .payment-tabs { display: flex; gap: 8px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
     .pay-tab-btn { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-weight: 600; font-size: 13px; cursor: pointer; text-align: center; }
@@ -59,17 +60,52 @@
     .pay-tab-content { display: none; padding: 10px 0; }
     .pay-tab-content.active { display: block; }
 
-    .qris-img-preview { width: 320px; height: 320px; border: 2px solid #0f172a; border-radius: 10px; object-fit: contain; margin: 15px auto; display: block; background: #fff; padding: 10px; }
+    .qris-img-preview { width: 280px; height: 280px; border: 2px solid #0f172a; border-radius: 10px; object-fit: contain; margin: 15px auto; display: block; background: #fff; padding: 10px; }
     .custom-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 13px; }
     .custom-table th { background: #f1f5f9; }
 
-    .input-field { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+    .input-field { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 10px; }
 
-    .admin-section-box { margin-top: 15px; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
-    .admin-section-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #0f172a; display: flex; align-items: center; justify-content: space-between; }
+    .admin-section-box { margin-top: 12px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+    .admin-section-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: #0f172a; display: flex; align-items: center; justify-content: space-between; }
 
-    /* Layout Struk Thermal 58mm Detail */
+    .stat-card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-card { background: #f1f5f9; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #cbd5e1; }
+    .stat-card-title { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .stat-card-value { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 2px; }
+
+    /* ============================================================
+       RESPONSIVE DESIGN KHUSUS TABLET / IPAD (768px - 1024px)
+    ============================================================ */
+    @media (max-width: 1024px) {
+      .menu-panel { padding: 12px; }
+      .cart-panel { min-width: 280px; max-width: 320px; padding: 12px; }
+      .header-title { font-size: 18px; }
+      .btn-admin-login { padding: 6px 10px; font-size: 11px; }
+      .cat-btn { padding: 6px 10px; font-size: 11px; border-radius: 14px; }
+      
+      .grid-menu { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+      .card-item { padding: 8px; border-radius: 8px; }
+      .card-title { font-size: 12px; margin-bottom: 3px; line-height: 1.2; }
+      .card-price { font-size: 12px; margin-bottom: 4px; }
+      .stock-badge { font-size: 10px; padding: 2px 5px; }
+
+      .cart-title { font-size: 15px; margin-bottom: 8px; }
+      .cart-item-name { font-size: 12px; }
+      .cart-item-sub { font-size: 10px; }
+      .row-summary.total { font-size: 15px; margin-bottom: 8px; }
+      .btn-action { padding: 8px; font-size: 12px; margin-bottom: 5px; }
+      .btn-pay-main { font-size: 13px; padding: 10px; }
+    }
+
+    @media (max-width: 768px) {
+      body { overflow-y: auto; height: auto; }
+      .container { flex-direction: column; height: auto; }
+      .menu-panel { flex: none; border-right: none; border-bottom: 2px solid #e2e8f0; height: 60vh; }
+      .cart-panel { min-width: 100%; max-width: 100%; height: 40vh; box-shadow: none; }
+    }
+
     #receiptPrintArea { display: none; }
     @media print {
       body * { visibility: hidden; }
@@ -138,9 +174,10 @@
           <span id="totalPrice">Rp 0</span>
         </div>
 
-        <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Metode Pembayaran</button>
-        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran Harian</button>
-        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Laporan Penjualan & Tutup Buku Bulanan</button>
+        <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Pembayaran</button>
+        <button class="btn-action btn-forecast" onclick="openForecastModal()">📈 Forecast Penjualan</button>
+        <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran</button>
+        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Tutup Buku Bulanan</button>
         <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
       </div>
     </div>
@@ -207,6 +244,69 @@
     </div>
   </div>
 
+  <!-- Modal Forecast Penjualan & Demand Bahan Baku -->
+  <div id="forecastModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 720px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
+        <h3>📈 Forecast Penjualan & Proyeksi Bahan Baku (30 Hari Depan)</h3>
+        <button onclick="closeForecastModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="stat-card-grid">
+        <div class="stat-card">
+          <div class="stat-card-title">Proyeksi Omset Bulanan</div>
+          <div class="stat-card-value" id="forecastTotalSalesText" style="color:#2563eb;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Rata-Rata Omset / Hari</div>
+          <div class="stat-card-value" id="forecastDailyAvgText" style="color:#16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Tren Penjualan</div>
+          <div class="stat-card-value" id="forecastTrendText" style="color:#7c3aed;">0%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+        <h4 style="margin-bottom:8px; color:#0f172a;">📊 Estimasi Demand Penjualan Menu (Paling Laris)</h4>
+        <div style="max-height:180px; overflow-y:auto;">
+          <table class="custom-table" style="background:#fff;">
+            <thead>
+              <tr>
+                <th>Nama Menu</th>
+                <th>Terjual Saat Ini</th>
+                <th>Rata-Rata / Hari</th>
+                <th>Proyeksi 30 Hari Depan</th>
+              </tr>
+            </thead>
+            <tbody id="forecastMenuTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:15px; background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0;">
+        <h4 style="margin-bottom:8px; color:#166534;">📦 Estimasi Kebutuhan Restok Bahan Baku (30 Hari Depan)</h4>
+        <div style="max-height:200px; overflow-y:auto;">
+          <table class="custom-table" style="background:#fff;">
+            <thead>
+              <tr>
+                <th>Bahan Baku</th>
+                <th>Sisa Stok Saat Ini</th>
+                <th>Estimasi Kebutuhan (30 Hari)</th>
+                <th>Status / Saran Restok</th>
+              </tr>
+            </thead>
+            <tbody id="forecastRawTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:15px; text-align:right;">
+        <button onclick="closeForecastModal()" style="background:#0f172a; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Tutup Analisis</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Pengeluaran -->
   <div id="expenseModal" class="modal-overlay">
     <div class="modal-content">
@@ -215,7 +315,7 @@
         <button onclick="closeExpenseModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
-      <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; margin-bottom:15px;" onsubmit="addExpense(event)">
+      <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px;" onsubmit="addExpense(event)">
         <input type="text" id="expenseName" class="input-field" placeholder="Keterangan" required style="margin:0;">
         <input type="number" id="expenseAmount" class="input-field" placeholder="Nominal (Rp)" required style="margin:0;">
         <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Catat</button>
@@ -302,8 +402,8 @@
           <span>📦 Manajemen Stok Bahan Baku (Raw Materials)</span>
         </div>
         <form style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:8px;" onsubmit="addNewRawMaterial(event)">
-          <input type="text" id="rawName" class="input-field" placeholder="Nama Bahan Baku (ex: Tepung Terigu)" required style="margin:0;">
-          <input type="text" id="rawUnit" class="input-field" placeholder="Satuan (gram / ml / pcs)" required style="margin:0;">
+          <input type="text" id="rawName" class="input-field" placeholder="Nama Bahan Baku (ex: Galon Air)" required style="margin:0;">
+          <input type="text" id="rawUnit" class="input-field" placeholder="Satuan (galon / gram / ml / pcs)" required style="margin:0;">
           <input type="number" id="rawStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
           <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Tambah Bahan</button>
         </form>
@@ -377,7 +477,7 @@
             <option value="nutrisari">Nutrisari</option>
             <option value="susu">Susu</option>
           </select>
-          <input type="number" id="newStock" class="input-field" placeholder="Stok Awal" required style="margin:0;">
+          <input type="number" id="newStock" class="input-field" placeholder="Stok Menu" required style="margin:0;">
           <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
         </form>
       </div>
@@ -441,37 +541,21 @@
   <script>
     // Data Default Bahan Baku Initial
     const defaultRawMaterials = [
-      { id: 1, name: 'Tepung Terigu Pancong', unit: 'gram', stock: 5000 },
-      { id: 2, name: 'Keju Parut', unit: 'gram', stock: 1000 },
-      { id: 3, name: 'Cokelat Lumer / Meses', unit: 'gram', stock: 1500 },
-      { id: 4, name: 'Susu Kental Manis', unit: 'ml', stock: 2000 },
-      { id: 5, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 },
-      { id: 6, name: 'Indomie Goreng Pack', unit: 'pcs', stock: 50 },
-      { id: 7, name: 'Telur Ayam', unit: 'pcs', stock: 100 }
+      { id: 1, name: 'Galon Air Mineral', unit: 'galon', stock: 7 },
+      { id: 2, name: 'Tepung Terigu Pancong', unit: 'gram', stock: 5000 },
+      { id: 3, name: 'Keju Parut', unit: 'gram', stock: 1000 },
+      { id: 4, name: 'Cokelat Lumer / Meses', unit: 'gram', stock: 1500 },
+      { id: 5, name: 'Susu Kental Manis', unit: 'ml', stock: 2000 },
+      { id: 6, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 }
     ];
 
     // Data Default Menu dengan Resep Bawaan
     const defaultProducts = [
-      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20, recipe: [{ rawId: 1, qty: 50 }, { rawId: 2, qty: 15 }, { rawId: 3, qty: 15 }, { rawId: 4, qty: 10 }] },
-      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15, recipe: [{ rawId: 1, qty: 50 }, { rawId: 4, qty: 15 }] },
-      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30, recipe: [{ rawId: 6, qty: 1 }, { rawId: 7, qty: 1 }] },
-      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50, recipe: [{ rawId: 5, qty: 15 }, { rawId: 4, qty: 30 }] },
-      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40, recipe: [{ rawId: 5, qty: 15 }] },
-      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] },
-      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25, recipe: [] },
-      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20, recipe: [{ rawId: 2, qty: 20 }, { rawId: 3, qty: 20 }] },
-      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15, recipe: [] },
-      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20, recipe: [{ rawId: 2, qty: 20 }, { rawId: 4, qty: 15 }] },
-      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15, recipe: [{ rawId: 3, qty: 20 }] },
-      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25, recipe: [] },
-      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20, recipe: [] },
-      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30, recipe: [] },
-      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25, recipe: [] },
-      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35, recipe: [{ rawId: 5, qty: 15 }] },
-      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30, recipe: [{ rawId: 4, qty: 20 }] },
-      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25, recipe: [{ rawId: 4, qty: 25 }] },
-      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30, recipe: [{ rawId: 4, qty: 40 }] },
-      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20, recipe: [{ rawId: 4, qty: 30 }, { rawId: 7, qty: 1 }] }
+      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20, recipe: [{ rawId: 2, qty: 50 }, { rawId: 3, qty: 15 }, { rawId: 4, qty: 15 }, { rawId: 5, qty: 10 }] },
+      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15, recipe: [{ rawId: 2, qty: 50 }, { rawId: 5, qty: 15 }] },
+      { id: 3, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 0, recipe: [{ rawId: 6, qty: 15 }, { rawId: 5, qty: 30 }] },
+      { id: 4, name: 'Es Galon Spesial', price: 5000, category: 'minuman', stock: 0, recipe: [{ rawId: 1, qty: 1 }] },
+      { id: 5, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] }
     ];
 
     let savedRaw = JSON.parse(localStorage.getItem('warkop_raw_materials'));
@@ -537,17 +621,46 @@
       }
 
       items.forEach(item => {
-        let badgeClass = 'normal';
-        let badgeText = `Stok: ${item.stock}`;
         let isOutOfStock = false;
+        let badgeClass = 'normal';
+        let badgeText = '';
 
-        if (item.stock <= 0) {
-          badgeClass = 'empty';
-          badgeText = 'Habis';
-          isOutOfStock = true;
-        } else if (item.stock <= 5) {
-          badgeClass = 'low';
-          badgeText = `Sisa ${item.stock}`;
+        if (item.recipe && item.recipe.length > 0) {
+          let maxPortions = Infinity;
+          for (const r of item.recipe) {
+            const raw = rawMaterials.find(m => m.id === r.rawId);
+            if (!raw || raw.stock < r.qty) {
+              maxPortions = 0;
+              break;
+            } else {
+              const possible = Math.floor(raw.stock / r.qty);
+              if (possible < maxPortions) maxPortions = possible;
+            }
+          }
+
+          if (maxPortions === 0 || maxPortions === Infinity) {
+            isOutOfStock = true;
+            badgeClass = 'empty';
+            badgeText = 'Habis';
+          } else if (maxPortions <= 5) {
+            badgeClass = 'low';
+            badgeText = `Sisa ${maxPortions}`;
+          } else {
+            badgeClass = 'normal';
+            badgeText = `Ada (${maxPortions})`;
+          }
+        } else {
+          if (item.stock <= 0) {
+            isOutOfStock = true;
+            badgeClass = 'empty';
+            badgeText = 'Habis';
+          } else if (item.stock <= 5) {
+            badgeClass = 'low';
+            badgeText = `Sisa ${item.stock}`;
+          } else {
+            badgeClass = 'normal';
+            badgeText = `Stok: ${item.stock}`;
+          }
         }
 
         grid.innerHTML += `
@@ -582,11 +695,24 @@
     function addToCart(id) {
       const product = products.find(p => p.id === id);
       const existing = cart.find(item => item.id === id);
-      const currentCartQty = existing ? existing.qty : 0;
+      const nextQty = (existing ? existing.qty : 0) + 1;
 
-      if (currentCartQty + 1 > product.stock) {
-        alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
-        return;
+      if (product.recipe && product.recipe.length > 0) {
+        for (const r of product.recipe) {
+          const raw = rawMaterials.find(m => m.id === r.rawId);
+          if (raw) {
+            const needed = r.qty * nextQty;
+            if (raw.stock < needed) {
+              alert(`Stok bahan baku "${raw.name}" tidak mencukupi! Dibutuhkan: ${needed} ${raw.unit}, Tersedia: ${raw.stock} ${raw.unit}`);
+              return;
+            }
+          }
+        }
+      } else {
+        if (nextQty > product.stock) {
+          alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+          return;
+        }
       }
 
       if (existing) {
@@ -602,11 +728,25 @@
       const product = products.find(p => p.id === id);
 
       if (item) {
-        if (delta > 0 && item.qty + 1 > product.stock) {
-          alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
-          return;
+        const nextQty = item.qty + delta;
+        if (delta > 0) {
+          if (product.recipe && product.recipe.length > 0) {
+            for (const r of product.recipe) {
+              const raw = rawMaterials.find(m => m.id === r.rawId);
+              if (raw) {
+                const needed = r.qty * nextQty;
+                if (raw.stock < needed) {
+                  alert(`Stok bahan baku "${raw.name}" tidak mencukupi! Dibutuhkan: ${needed} ${raw.unit}, Sisa stok: ${raw.stock} ${raw.unit}`);
+                  return;
+                }
+              }
+            }
+          } else if (nextQty > product.stock) {
+            alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
+            return;
+          }
         }
-        item.qty += delta;
+        item.qty = nextQty;
         if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
       }
       updateCart();
@@ -639,7 +779,6 @@
       document.getElementById('totalPrice').innerText = 'Rp ' + total.toLocaleString('id-ID');
     }
 
-    // Pengecekan Ketersediaan Bahan Baku Sebelum Transaksi Ditutup
     function checkRawMaterialsAvailability() {
       for (const cartItem of cart) {
         const prod = products.find(p => p.id === cartItem.id);
@@ -877,7 +1016,6 @@
       clearCart();
     }
 
-    // Eksekusi Transaksi: Pemotongan Stok Menu & Stok Bahan Baku Otomatis
     function executeTransaction(method) {
       const now = new Date();
       const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -885,10 +1023,10 @@
       cart.forEach(item => {
         const prod = products.find(p => p.id === item.id);
         if (prod) {
-          // Potong Stok Menu
-          prod.stock -= item.qty;
+          if (!prod.recipe || prod.recipe.length === 0) {
+            prod.stock -= item.qty;
+          }
 
-          // Potong Stok Bahan Baku Sesuai Resep
           if (prod.recipe && prod.recipe.length > 0) {
             prod.recipe.forEach(r => {
               const raw = rawMaterials.find(m => m.id === r.rawId);
@@ -923,6 +1061,110 @@
       updateCart();
     }
 
+    /* === FITUR FORECAST PENJUALAN & DEMAND BAHAN BAKU === */
+    function openForecastModal() {
+      calculateForecastData();
+      document.getElementById('forecastModal').style.display = 'flex';
+    }
+
+    function closeForecastModal() {
+      document.getElementById('forecastModal').style.display = 'none';
+    }
+
+    function calculateForecastData() {
+      const salesByDate = {};
+      const menuSalesQty = {};
+
+      monthlyTransactions.forEach(tx => {
+        salesByDate[tx.Tanggal] = (salesByDate[tx.Tanggal] || 0) + tx.Total;
+        menuSalesQty[tx.Menu] = (menuSalesQty[tx.Menu] || 0) + tx.Qty;
+      });
+
+      const dates = Object.keys(salesByDate);
+      const activeDaysCount = Math.max(dates.length, 1);
+      const totalSalesSoFar = monthlyTransactions.reduce((sum, tx) => sum + tx.Total, 0);
+
+      const avgDailySales = totalSalesSoFar / activeDaysCount;
+      const forecast30DaysSales = avgDailySales * 30;
+
+      let trendRate = 0;
+      if (dates.length >= 2) {
+        const half = Math.floor(dates.length / 2);
+        const firstHalfSum = dates.slice(0, half).reduce((sum, d) => sum + salesByDate[d], 0);
+        const secondHalfSum = dates.slice(half).reduce((sum, d) => sum + salesByDate[d], 0);
+        if (firstHalfSum > 0) {
+          trendRate = ((secondHalfSum - firstHalfSum) / firstHalfSum) * 100;
+        }
+      }
+
+      document.getElementById('forecastTotalSalesText').innerText = 'Rp ' + Math.round(forecast30DaysSales).toLocaleString('id-ID');
+      document.getElementById('forecastDailyAvgText').innerText = 'Rp ' + Math.round(avgDailySales).toLocaleString('id-ID');
+      
+      const trendElem = document.getElementById('forecastTrendText');
+      trendElem.innerText = (trendRate >= 0 ? '+' : '') + trendRate.toFixed(1) + '%';
+      trendElem.style.color = trendRate >= 0 ? '#16a34a' : '#dc2626';
+
+      const menuTableBody = document.getElementById('forecastMenuTableBody');
+      menuTableBody.innerHTML = '';
+
+      const predictedMenuDemand = {};
+
+      products.forEach(p => {
+        const soldQty = menuSalesQty[p.name] || 0;
+        const dailyAvgQty = soldQty / activeDaysCount;
+        const forecast30DaysQty = Math.round(dailyAvgQty * 30);
+        
+        predictedMenuDemand[p.id] = forecast30DaysQty;
+
+        menuTableBody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${soldQty} porsi</td>
+            <td>${dailyAvgQty.toFixed(1)} / hari</td>
+            <td><strong style="color:#2563eb;">${forecast30DaysQty} porsi</strong></td>
+          </tr>
+        `;
+      });
+
+      const rawTableBody = document.getElementById('forecastRawTableBody');
+      rawTableBody.innerHTML = '';
+
+      rawMaterials.forEach(raw => {
+        let neededQty30Days = 0;
+
+        products.forEach(p => {
+          const predictedQty = predictedMenuDemand[p.id] || 0;
+          if (p.recipe && p.recipe.length > 0) {
+            const recipeItem = p.recipe.find(r => r.rawId === raw.id);
+            if (recipeItem) {
+              neededQty30Days += (recipeItem.qty * predictedQty);
+            }
+          }
+        });
+
+        let statusText = '';
+        let statusColor = '#15803d';
+
+        if (raw.stock < neededQty30Days) {
+          const shortage = neededQty30Days - raw.stock;
+          statusText = `⚠️ Perlu Restok +${shortage} ${raw.unit}`;
+          statusColor = '#dc2626';
+        } else {
+          statusText = `✅ Stok Cukup`;
+          statusColor = '#15803d';
+        }
+
+        rawTableBody.innerHTML += `
+          <tr>
+            <td><strong>${raw.name}</strong></td>
+            <td>${raw.stock} ${raw.unit}</td>
+            <td><strong>${neededQty30Days} ${raw.unit}</strong></td>
+            <td><span style="font-weight:bold; color:${statusColor};">${statusText}</span></td>
+          </tr>
+        `;
+      });
+    }
+
     /* === FITUR MANAJEMEN BAHAN BAKU & RESEP === */
     function renderRawMaterialTable() {
       const tbody = document.getElementById('rawMaterialTableBody');
@@ -939,7 +1181,7 @@
           <tr>
             <td><strong>${raw.name}</strong></td>
             <td>${raw.unit}</td>
-            <td><strong style="color:${raw.stock <= 100 ? '#dc2626' : '#15803d'};">${raw.stock}</strong> ${raw.unit}</td>
+            <td><strong style="color:${raw.stock <= 2 ? '#dc2626' : '#15803d'};">${raw.stock}</strong> ${raw.unit}</td>
             <td>
               <input type="number" placeholder="+Qty" style="width:70px; padding:3px;" onchange="addRawStockDirect(${raw.id}, this.value); this.value='';">
             </td>
@@ -1021,7 +1263,7 @@
       }
 
       let listHtml = '<ul style="padding-left:18px; margin-top:4px;">';
-      prod.recipe.forEach((r, idx) => {
+      prod.recipe.forEach((r) => {
         const raw = rawMaterials.find(m => m.id === r.rawId);
         if (raw) {
           listHtml += `
