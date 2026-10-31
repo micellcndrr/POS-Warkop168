@@ -13,16 +13,15 @@
     .menu-panel { flex: 2; padding: 16px; overflow-y: auto; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
     .header-title { font-size: 22px; font-weight: 700; color: #0f172a; }
-    .header-actions { display: flex; gap: 6px; }
-    .btn-header { background: #0f172a; color: #ffffff; padding: 7px 12px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .btn-sync { background: #2563eb; }
+    .btn-header { background: #0f172a; color: #ffffff; padding: 8px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
     .search-box { margin-bottom: 12px; }
     .categories { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .cat-btn { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 16px; background: #ffffff; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; }
     .cat-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
 
-    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding-bottom: 20px; }
+    /* Grid Dinamis Tanpa Batas Jumlah Menu */
+    .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; padding-bottom: 30px; }
     .card-item { background: #ffffff; border-radius: 8px; padding: 10px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04); cursor: pointer; border: 1px solid #e2e8f0; transition: transform 0.1s, border-color 0.2s; }
     .card-item:hover { transform: translateY(-2px); border-color: #2563eb; }
     .card-item.out-of-stock { opacity: 0.6; cursor: not-allowed; border-color: #fca5a5; background-color: #fef2f2; }
@@ -55,7 +54,7 @@
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: #ffffff; padding: 18px; border-radius: 10px; width: 92%; max-width: 650px; max-height: 85vh; display: flex; flex-direction: column; overflow-y: auto; }
-    
+
     .payment-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
     .pay-tab-btn { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; font-weight: 600; font-size: 12px; cursor: pointer; text-align: center; }
     .pay-tab-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
@@ -77,7 +76,6 @@
     .stat-card-title { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
     .stat-card-value { font-size: 15px; font-weight: 700; color: #0f172a; margin-top: 2px; }
 
-    /* LAYOUT OPTIMIZATION TABLET & MOBILE */
     @media (max-width: 1024px) {
       .menu-panel { padding: 12px; }
       .cart-panel { min-width: 270px; max-width: 310px; padding: 12px; }
@@ -117,10 +115,7 @@
     <div class="menu-panel">
       <div class="top-header">
         <h1 class="header-title">Warkop Pancong 168</h1>
-        <div class="header-actions">
-          <button class="btn-header btn-sync" onclick="forceSyncMenu()">🔄 Sync Menu</button>
-          <button class="btn-header" onclick="loginAdmin()">🔑 Dashboard Owner</button>
-        </div>
+        <button class="btn-header" onclick="loginAdmin()">🔑 Dashboard Owner</button>
       </div>
       
       <div class="search-box">
@@ -228,7 +223,7 @@
     </div>
   </div>
 
-  <!-- Modal Forecast Penjualan & Demand Bahan Baku -->
+  <!-- Modal Forecast Penjualan -->
   <div id="forecastModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 720px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
@@ -373,10 +368,25 @@
   <div id="adminModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 850px; height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
-        <h3>🔑 Dashboard Owner (Manajemen Stok, Bahan Baku & Resep)</h3>
+        <h3>🔑 Dashboard Owner (Manajemen Stok & Transfer Data)</h3>
         <div>
-          <button onclick="resetDefaultMenu()" style="background:#d97706; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; margin-right:5px;">🔄 Reset Sistem Default</button>
           <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
+        </div>
+      </div>
+
+      <!-- Fitur Sync Laptop -> Tablet via Export/Import Data -->
+      <div class="admin-section-box" style="background:#f0fdf4; border-color:#bbf7d0;">
+        <div class="admin-section-title" style="color:#166534;">
+          <span>📲 Transfer Data Laptop ke Tablet (Export / Import Data Warkop)</span>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;">
+          <button onclick="exportFullDataJSON()" style="background:#16a34a; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">
+            📥 Download Backup Data Menu & Stok (.json)
+          </button>
+          <label style="background:#0284c7; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; display:inline-block;">
+            📤 Load / Import Data File Ke Perangkat Ini
+            <input type="file" id="importFileInput" accept=".json" onchange="importFullDataJSON(event)" style="display:none;">
+          </label>
         </div>
       </div>
 
@@ -462,7 +472,7 @@
             <option value="susu">Susu</option>
           </select>
           <input type="number" id="newStock" class="input-field" placeholder="Stok Menu" required style="margin:0;">
-          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan</button>
+          <button type="submit" style="background:#2563eb; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">Simpan Menu</button>
         </form>
       </div>
 
@@ -523,56 +533,9 @@
   <div id="receiptPrintArea"></div>
 
   <script>
-    // Data Default Bahan Baku Initial
-    const defaultRawMaterials = [
-      { id: 1, name: 'Galon Air Mineral', unit: 'galon', stock: 7 },
-      { id: 2, name: 'Tepung Terigu Pancong', unit: 'gram', stock: 5000 },
-      { id: 3, name: 'Keju Parut', unit: 'gram', stock: 1000 },
-      { id: 4, name: 'Cokelat Lumer / Meses', unit: 'gram', stock: 1500 },
-      { id: 5, name: 'Susu Kental Manis', unit: 'ml', stock: 2000 },
-      { id: 6, name: 'Kopi Espresso Powder', unit: 'gram', stock: 1000 },
-      { id: 7, name: 'Indomie Goreng Pack', unit: 'pcs', stock: 50 },
-      { id: 8, name: 'Telur Ayam', unit: 'pcs', stock: 100 }
-    ];
-
-    // Data Lengkap 20 Default Menu Warkop
-    const defaultProducts = [
-      { id: 1, name: 'Pancong Cokelat Keju', price: 12000, category: 'makanan', stock: 20, recipe: [{ rawId: 2, qty: 50 }, { rawId: 3, qty: 15 }, { rawId: 4, qty: 15 }, { rawId: 5, qty: 10 }] },
-      { id: 2, name: 'Pancong Lumer Matcha', price: 13000, category: 'makanan', stock: 15, recipe: [{ rawId: 2, qty: 50 }, { rawId: 5, qty: 15 }] },
-      { id: 3, name: 'Indomie Goreng + Telur', price: 10000, category: 'makanan', stock: 30, recipe: [{ rawId: 7, qty: 1 }, { rawId: 8, qty: 1 }] },
-      { id: 4, name: 'Kopi Susu Dingin', price: 8000, category: 'kopi', stock: 50, recipe: [{ rawId: 6, qty: 15 }, { rawId: 5, qty: 30 }] },
-      { id: 5, name: 'Kopi Hitam / Tubruk', price: 5000, category: 'kopi', stock: 40, recipe: [{ rawId: 6, qty: 15 }] },
-      { id: 6, name: 'Es Teh Manis', price: 4000, category: 'minuman', stock: 60, recipe: [] },
-      { id: 7, name: 'Nutrisari Jeruk Peras', price: 5000, category: 'nutrisari', stock: 25, recipe: [] },
-      { id: 8, name: 'Roti Bakar Cokelat Keju', price: 15000, category: 'roti bakar', stock: 20, recipe: [{ rawId: 3, qty: 20 }, { rawId: 4, qty: 20 }] },
-      { id: 9, name: 'Roti Bakar Nutella', price: 16000, category: 'roti bakar', stock: 15, recipe: [] },
-      { id: 10, name: 'Pisang Bakar Keju Susu', price: 14000, category: 'pisang bakar', stock: 20, recipe: [{ rawId: 3, qty: 20 }, { rawId: 5, qty: 15 }] },
-      { id: 11, name: 'Pisang Bakar Cokelat Lumer', price: 15000, category: 'pisang bakar', stock: 15, recipe: [{ rawId: 4, qty: 20 }] },
-      { id: 12, name: 'Rice Bowl Ayam Geprek', price: 18000, category: 'rice bowl', stock: 25, recipe: [] },
-      { id: 13, name: 'Rice Bowl Beef Teriyaki', price: 22000, category: 'rice bowl', stock: 20, recipe: [] },
-      { id: 14, name: 'Cemilan Kentang Goreng', price: 12000, category: 'cemilan', stock: 30, recipe: [] },
-      { id: 15, name: 'Cemilan Cireng Rujak', price: 10000, category: 'cemilan', stock: 25, recipe: [] },
-      { id: 16, name: 'Kopi Malaka Gula Aren', price: 12000, category: 'malaka', stock: 35, recipe: [{ rawId: 6, qty: 15 }] },
-      { id: 17, name: 'Coklat Panas / Es Coklat', price: 10000, category: 'coklat', stock: 30, recipe: [{ rawId: 5, qty: 20 }] },
-      { id: 18, name: 'Es Soda Gembira', price: 12000, category: 'soda', stock: 25, recipe: [{ rawId: 5, qty: 25 }] },
-      { id: 19, name: 'Susu Putih Hangat / Dingin', price: 6000, category: 'susu', stock: 30, recipe: [{ rawId: 5, qty: 40 }] },
-      { id: 20, name: 'Susu STMJ', price: 10000, category: 'susu', stock: 20, recipe: [{ rawId: 5, qty: 30 }, { rawId: 8, qty: 1 }] }
-    ];
-
-    // OTOMATIS MEMPERBARUI MEMORI BROWSER JIKA DATA TERSIMPAN KURANG DARI 20 MENU
-    let savedProducts = JSON.parse(localStorage.getItem('warkop_products'));
-    if (!savedProducts || savedProducts.length < defaultProducts.length) {
-      savedProducts = defaultProducts;
-      localStorage.setItem('warkop_products', JSON.stringify(defaultProducts));
-    }
-    let products = savedProducts;
-
-    let savedRaw = JSON.parse(localStorage.getItem('warkop_raw_materials'));
-    if (!savedRaw || savedRaw.length < defaultRawMaterials.length) {
-      savedRaw = defaultRawMaterials;
-      localStorage.setItem('warkop_raw_materials', JSON.stringify(defaultRawMaterials));
-    }
-    let rawMaterials = savedRaw;
+    // System LocalStorage Key Load - Tidak memaksa jumlah array tertentu
+    let rawMaterials = JSON.parse(localStorage.getItem('warkop_raw_materials')) || [];
+    let products = JSON.parse(localStorage.getItem('warkop_products')) || [];
 
     let cart = [];
     let monthlyTransactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
@@ -583,23 +546,6 @@
 
     const adminPin = '4M112208';
 
-    function forceSyncMenu() {
-      localStorage.setItem('warkop_products', JSON.stringify(defaultProducts));
-      localStorage.setItem('warkop_raw_materials', JSON.stringify(defaultRawMaterials));
-      products = [...defaultProducts];
-      rawMaterials = [...defaultRawMaterials];
-      renderMenuFilter();
-      alert('Seluruh 20 menu warkop berhasil disinkronkan!');
-    }
-
-    function resetDefaultMenu() {
-      if (confirm('Yakin ingin mereset seluruh daftar menu & bahan baku ke versi bawaan?')) {
-        localStorage.removeItem('warkop_products');
-        localStorage.removeItem('warkop_raw_materials');
-        location.reload();
-      }
-    }
-
     function saveRawMaterials() {
       localStorage.setItem('warkop_raw_materials', JSON.stringify(rawMaterials));
       renderRawMaterialTable();
@@ -609,6 +555,51 @@
     function saveProducts() {
       localStorage.setItem('warkop_products', JSON.stringify(products));
       renderMenuFilter();
+    }
+
+    /* EXPORT & IMPORT DATA ANTAR PERANGKAT (LAPTOP <-> TABLET) */
+    function exportFullDataJSON() {
+      const exportObj = {
+        products: products,
+        rawMaterials: rawMaterials,
+        qrisUrl: savedQrisUrl
+      };
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Data_Menu_Warkop_Pancong_168_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importFullDataJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.products && Array.isArray(imported.products)) {
+            products = imported.products;
+            saveProducts();
+          }
+          if (imported.rawMaterials && Array.isArray(imported.rawMaterials)) {
+            rawMaterials = imported.rawMaterials;
+            saveRawMaterials();
+          }
+          if (imported.qrisUrl) {
+            savedQrisUrl = imported.qrisUrl;
+            localStorage.setItem('warkop_qris_url', savedQrisUrl);
+          }
+          alert('Data menu dan stok berhasil di-load penuh ke perangkat ini!');
+          location.reload();
+        } catch (err) {
+          alert('Format file JSON tidak valid!');
+        }
+      };
+      reader.readAsText(file);
     }
 
     function loginAdmin() {
@@ -635,7 +626,7 @@
       const grid = document.getElementById('menuGrid');
       grid.innerHTML = '';
       if (items.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 20px;">Menu tidak ditemukan</p>';
+        grid.innerHTML = '<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 20px;">Belum ada menu. Buka Dashboard Owner untuk menambah menu.</p>';
         return;
       }
 
@@ -1080,7 +1071,7 @@
       updateCart();
     }
 
-    /* === FITUR FORECAST PENJUALAN & DEMAND BAHAN BAKU === */
+    /* FITUR FORECAST PENJUALAN */
     function openForecastModal() {
       calculateForecastData();
       document.getElementById('forecastModal').style.display = 'flex';
@@ -1184,7 +1175,7 @@
       });
     }
 
-    /* === FITUR MANAJEMEN BAHAN BAKU & RESEP === */
+    /* MANAJEMEN BAHAN BAKU & RESEP */
     function renderRawMaterialTable() {
       const tbody = document.getElementById('rawMaterialTableBody');
       if (!tbody) return;
@@ -1272,7 +1263,9 @@
     }
 
     function renderCurrentProductRecipe() {
-      const prodId = parseInt(document.getElementById('recipeProductSelect').value);
+      const selectElem = document.getElementById('recipeProductSelect');
+      if (!selectElem || !selectElem.value) return;
+      const prodId = parseInt(selectElem.value);
       const display = document.getElementById('recipeDisplayList');
       const prod = products.find(p => p.id === prodId);
 
@@ -1331,7 +1324,7 @@
       }
     }
 
-    /* === FITUR LAINNYA === */
+    /* CATATAN PENGELUARAN & TUTUP BUKU */
     function openExpenseModal() {
       renderExpenseTable();
       document.getElementById('expenseModal').style.display = 'flex';
