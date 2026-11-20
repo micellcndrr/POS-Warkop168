@@ -3,394 +3,436 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Owner - Rekap Penjualan</title>
-  <!-- Library SheetJS untuk Export Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      padding: 20px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      margin-bottom: 20px;
-    }
-
-    .header h1 {
-      font-size: 22px;
-    }
-
-    .btn-export {
-      background: #15803d;
-      color: #fff;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .card {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-
-    .card h3 {
-      font-size: 13px;
-      color: #64748b;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-    }
-
-    .card .amount {
-      font-size: 22px;
-      font-weight: 800;
-    }
-
-    .card.omset .amount { color: #16a34a; }
-    .card.pengeluaran .amount { color: #dc2626; }
-    .card.laba .amount { color: #2563eb; }
-
-    .section-title {
-      font-size: 18px;
-      margin-bottom: 12px;
-      margin-top: 20px;
-    }
-
-    .table-container {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      margin-bottom: 25px;
-      overflow-x: auto;
-    }
-
-    .custom-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .custom-table th, .custom-table td {
-      border: 1px solid #e2e8f0;
-      padding: 10px 12px;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    .custom-table th {
-      background: #f8fafc;
-      font-weight: 700;
-    }
-
-    /* Modal Protection */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-
-    .modal-box {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      text-align: center;
-      width: 320px;
-    }
-
-    .input-field {
-      width: 100%;
-      padding: 10px;
-      margin: 15px 0;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 16px;
-      text-align: center;
-    }
-
-    .btn-login {
-      background: #0f172a;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-  </style>
+  <title>Owner Dashboard - Warkop Pancong 168</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen pb-12">
 
-  <!-- Modal Kunci PIN Owner -->
-  <div id="pinModal" class="modal-overlay">
-    <div class="modal-box">
-      <h2>🔑 Akses Owner</h2>
-      <p style="font-size:13px; color:#64748b; margin-top:5px;">Masukkan PIN Admin untuk melihat laporan</p>
-      <input type="password" id="pinInput" class="input-field" placeholder="Masukkan PIN" maxlength="10">
-      <button class="btn-login" onclick="verifyPin()">Masuk Dashboard</button>
+  <!-- Layar Kunci PIN Owner -->
+  <div id="layar-pin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-xs w-full text-center space-y-4">
+      <h2 class="text-xl font-bold text-amber-400">Akses Khusus Owner</h2>
+      <p class="text-xs text-slate-400">Masukkan PIN untuk membuka laporan & kelola stok</p>
+      <input type="password" id="input-pin" placeholder="••••••" class="w-full text-center tracking-widest text-xl bg-slate-950 border border-slate-700 rounded-xl py-2.5">
+      <button onclick="cekPin()" class="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">Buka Dashboard</button>
+      <a href="index.html" class="block text-xs text-slate-500 hover:text-slate-300">← Kembali ke Kasir</a>
     </div>
   </div>
 
-  <!-- Content Dashboard -->
-  <div id="dashboardContent" style="display:none;">
-    <div class="header">
-      <div>
-        <h1>👑 Dashboard Pantau Owner</h1>
-        <p style="font-size:13px; color:#64748b;">Monitoring Penjualan & Keuangan Warkop Real-time</p>
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <div>
+      <h1 class="text-xl font-bold text-amber-400">Dashboard Owner • Warkop 168</h1>
+      <p class="text-xs text-slate-400">Pemantauan Real-Time, Audit Stok & Deteksi Anomali</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="downloadExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-lg">
+        📥 Download Excel Bulanan
+      </button>
+      <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-lg">
+        Layar Kasir →
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+
+    <!-- PANEL ALERT ANTI-FRAUD (OTOMATIS MUNCUL JIKA ADA ANOMALI) -->
+    <section id="panel-alert" class="hidden bg-rose-950/80 border-2 border-rose-500 rounded-2xl p-4 space-y-2">
+      <div class="flex items-center gap-2 text-rose-400 font-extrabold text-sm">
+        <span class="animate-ping inline-flex h-2.5 w-2.5 rounded-full bg-rose-400"></span>
+        PERINGATAN ANOMALI TRANSAKSI TERDETEKSI!
       </div>
-      <button class="btn-export" onclick="exportMonthlyRecapExcel()">📥 Download Rekap Excel</button>
-    </div>
+      <ul id="list-alert" class="text-xs text-rose-200 list-disc pl-5 space-y-1"></ul>
+    </section>
 
-    <!-- Card Ringkasan -->
-    <div class="summary-grid">
-      <div class="card omset">
-        <h3>Total Omset Penjualan</h3>
-        <div class="amount" id="totalOmset">Rp 0</div>
+    <!-- Ringkasan Omzet Hari Ini -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+        <p class="text-xs text-slate-400">Omzet Hari Ini</p>
+        <p id="stat-omzet" class="text-xl font-extrabold text-amber-400 mt-1">Rp 0</p>
       </div>
-      <div class="card pengeluaran">
-        <h3>Total Pengeluaran</h3>
-        <div class="amount" id="totalPengeluaran">Rp 0</div>
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+        <p class="text-xs text-slate-400">Total Faktur Hari Ini</p>
+        <p id="stat-faktur" class="text-xl font-extrabold text-white mt-1">0</p>
       </div>
-      <div class="card laba">
-        <h3>Laba Bersih</h3>
-        <div class="amount" id="totalLaba">Rp 0</div>
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+        <p class="text-xs text-slate-400">Tunai vs QRIS</p>
+        <p id="stat-metode" class="text-sm font-bold text-emerald-400 mt-2">Rp 0 / Rp 0</p>
       </div>
-    </div>
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+        <p class="text-xs text-slate-400">Status Transaksi Rapel</p>
+        <p id="stat-rapel" class="text-sm font-bold text-slate-300 mt-2">Aman (0 Indikasi)</p>
+      </div>
+    </section>
 
-    <!-- Tabel Riwayat Penjualan -->
-    <h2 class="section-title">📜 Laporan Transaksi Penjualan</h2>
-    <div class="table-container">
-      <table class="custom-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Menu</th>
-            <th>Qty</th>
-            <th>Metode Pembayaran</th>
-            <th>Total Penjualan</th>
-          </tr>
-        </thead>
-        <tbody id="salesTableBody"></tbody>
-      </table>
-    </div>
+    <!-- Distribusi Transaksi Per Jam (Untuk melihat jam kosong vs menumpuk) -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+      <h2 class="font-bold text-sm text-slate-200 mb-3">📊 Distribusi Transaksi Hari Ini Per Jam (Cek Kekosongan Jam Operasional)</h2>
+      <div id="grafik-jam" class="grid grid-cols-8 sm:grid-cols-16 gap-1.5 items-end h-28 pt-4 border-b border-slate-800">
+        <!-- Bar per jam dirender otomatis -->
+      </div>
+      <p class="text-[11px] text-slate-500 mt-2">*Jika bar kosong di jam ramai lalu tiba-tiba tinggi di satu jam tertentu, segera cek log faktur di bawah.</p>
+    </section>
 
-    <!-- Tabel Catatan Pengeluaran -->
-    <h2 class="section-title">💸 Catatan Pengeluaran Harian</h2>
-    <div class="table-container">
-      <table class="custom-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Keterangan Pengeluaran</th>
-            <th>Nominal</th>
-          </tr>
-        </thead>
-        <tbody id="expenseTableBody"></tbody>
-      </table>
-    </div>
-
-    <!-- Tabel Audit Restok -->
-    <h2 class="section-title">📋 Audit Log Barang Masuk (Restok)</h2>
-    <div class="table-container">
-      <table class="custom-table">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>Nama Menu</th>
-            <th>Tambahan Stok</th>
-            <th>Keterangan</th>
-          </tr>
-        </thead>
-        <tbody id="restockTableBody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <script>
-    const adminPin = '4M112208';
-
-    function verifyPin() {
-      const input = document.getElementById('pinInput').value;
-      if (input === adminPin) {
-        document.getElementById('pinModal').style.display = 'none';
-        document.getElementById('dashboardContent').style.display = 'block';
-        loadDashboardData();
-      } else {
-        alert('PIN Admin Salah!');
-        document.getElementById('pinInput').value = '';
-      }
-    }
-
-    function loadDashboardData() {
-      const transactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
-      const expenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
-      const restocks = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
-
-      let totalOmset = 0;
-      let totalPengeluaran = 0;
-
-      // Render Sales Table
-      const salesBody = document.getElementById('salesTableBody');
-      salesBody.innerHTML = '';
-      if (transactions.length === 0) {
-        salesBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada transaksi penjualan</td></tr>';
-      } else {
-        transactions.forEach(tx => {
-          totalOmset += tx.Total;
-          salesBody.innerHTML += `
-            <tr>
-              <td>${tx.Tanggal}</td>
-              <td><strong>${tx.Menu}</strong></td>
-              <td>${tx.Qty}</td>
-              <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
-              <td>Rp ${tx.Total.toLocaleString('id-ID')}</td>
-            </tr>
-          `;
-        });
-      }
-
-      // Render Expense Table
-      const expenseBody = document.getElementById('expenseTableBody');
-      expenseBody.innerHTML = '';
-      if (expenses.length === 0) {
-        expenseBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Belum ada catatan pengeluaran</td></tr>';
-      } else {
-        expenses.forEach(exp => {
-          totalPengeluaran += exp.Nominal;
-          expenseBody.innerHTML += `
-            <tr>
-              <td>${exp.Tanggal}</td>
-              <td>${exp.Nama}</td>
-              <td>Rp ${exp.Nominal.toLocaleString('id-ID')}</td>
-            </tr>
-          `;
-        });
-      }
-
-      // Render Restock Table
-      const restockBody = document.getElementById('restockTableBody');
-      restockBody.innerHTML = '';
-      if (restocks.length === 0) {
-        restockBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada log barang masuk</td></tr>';
-      } else {
-        restocks.forEach(log => {
-          restockBody.innerHTML += `
-            <tr>
-              <td>${log.Waktu}</td>
-              <td><strong>${log.Menu}</strong></td>
-              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
-              <td>${log.Keterangan}</td>
-            </tr>
-          `;
-        });
-      }
-
-      // Render Summary Cards
-      const labaBersih = totalOmset - totalPengeluaran;
-      document.getElementById('totalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
-      document.getElementById('totalPengeluaran').innerText = 'Rp ' + totalPengeluaran.toLocaleString('id-ID');
-      document.getElementById('totalLaba').innerText = 'Rp ' + labaBersih.toLocaleString('id-ID');
-    }
-
-    function exportMonthlyRecapExcel() {
-      const transactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
-      const expenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
-      const restocks = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
-
-      if (transactions.length === 0 && expenses.length === 0) {
-        alert('Belum ada data untuk di-download!');
-        return;
-      }
-
-      const menuSummary = {};
-      let totalOmset = 0;
-
-      transactions.forEach(tx => {
-        if (!menuSummary[tx.Menu]) {
-          menuSummary[tx.Menu] = { Kategori: tx.Kategori, Harga: tx.Harga, Qty: 0, Total: 0 };
-        }
-        menuSummary[tx.Menu].Qty += tx.Qty;
-        menuSummary[tx.Menu].Total += tx.Total;
-        totalOmset += tx.Total;
-      });
-
-      const totalExpense = expenses.reduce((sum, e) => sum + e.Nominal, 0);
-      const netProfit = totalOmset - totalExpense;
-
-      const excelData = [
-        ["LAPORAN REKAP OWNER WARKOP"],
-        ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
-        [""],
-        ["--- RINGKASAN PENJUALAN ---"],
-        ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
-      ];
-
-      let no = 1;
-      for (const [menuName, val] of Object.entries(menuSummary)) {
-        excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
-      }
-      excelData.push(["", "TOTAL OMSET PENJUALAN", "", "", "", totalOmset]);
-      excelData.push([""]);
-
-      excelData.push(["--- RINGKASAN PENGELUARAN ---"]);
-      excelData.push(["No", "Tanggal", "Keterangan Pengeluaran", "", "", "Nominal"]);
+    <!-- Grid Pengelolaan Menu & Restok (Tanpa Bahan Baku/Gramasi) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
-      let noExp = 1;
-      expenses.forEach(exp => {
-        excelData.push([noExp++, exp.Tanggal, exp.Nama, "", "", exp.Nominal]);
+      <!-- Tambah Menu Baru & Pengaturan QRIS -->
+      <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+        <h2 class="font-bold text-base text-amber-400">+ Buat Menu Baru</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <input type="text" id="baru-nama" placeholder="Nama Menu (mis: Pancong Coklat)" class="col-span-2 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <input type="number" id="baru-harga" placeholder="Harga (Rp)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <select id="baru-kategori" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+            <option value="Makanan">Makanan</option>
+            <option value="Minuman">Minuman</option>
+            <option value="Tambahan">Tambahan</option>
+          </select>
+          <input type="number" id="baru-stok" placeholder="Stok Awal (Porsi/Pcs)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <button onclick="tambahMenu()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-sm">Simpan Menu</button>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <h2 class="font-bold text-sm text-slate-300">Link URL Gambar QRIS</h2>
+        <div class="flex gap-2">
+          <input type="text" id="input-qris" placeholder="Tempel URL gambar QRIS..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <button onclick="simpanQris()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-xs font-bold">Simpan</button>
+        </div>
+      </section>
+
+      <!-- Restok Menu Jadi & Audit Log Restok -->
+      <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="font-bold text-base text-emerald-400">📦 Restok Menu Jadi</h2>
+          <button onclick="bukaLogRestok()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg">
+            📋 Lihat Audit Log Restok
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <select id="pilih-restok-menu" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm"></select>
+          <input type="number" id="jumlah-restok" placeholder="Jumlah (+)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+          <button onclick="prosesRestok()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-sm py-2">+ Tambah Stok</button>
+        </div>
+        <input type="text" id="ket-restok" placeholder="Keterangan (mis: Adonan pagi / Belanja shift 1)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs">
+      </section>
+    </div>
+
+    <!-- Tabel Kelola Harga & Stok Menu -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl overflow-x-auto">
+      <h2 class="font-bold text-base mb-3">Kelola Harga, Stok & Hapus Menu</h2>
+      <table class="w-full text-left text-sm">
+        <thead class="text-xs text-slate-400 border-b border-slate-800">
+          <tr>
+            <th class="py-2">Nama Menu</th>
+            <th class="py-2">Kategori</th>
+            <th class="py-2">Harga (Rp)</th>
+            <th class="py-2">Sisa Stok</th>
+            <th class="py-2 text-right">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-menu" class="divide-y divide-slate-800/60"></tbody>
+      </table>
+    </section>
+
+    <!-- Log Transaksi Real-Time (Anti-Backdate Audit) -->
+    <section class="bg-slate-900 border border-slate-800 p-5 rounded-2xl overflow-x-auto">
+      <h2 class="font-bold text-base mb-1">🕵️ Log Transaksi Real-Time (Terkunci Waktu Server)</h2>
+      <p class="text-xs text-slate-400 mb-3">Transaksi yang diinput beruntun secara tidak wajar otomatis ditandai merah.</p>
+      <table class="w-full text-left text-xs">
+        <thead class="text-slate-400 border-b border-slate-800">
+          <tr>
+            <th class="py-2">Waktu Server (WIB)</th>
+            <th class="py-2">Kasir</th>
+            <th class="py-2">Pesanan</th>
+            <th class="py-2">Metode</th>
+            <th class="py-2">Total</th>
+            <th class="py-2">Status Audit</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-transaksi" class="divide-y divide-slate-800/60"></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- Modal Audit Log Riwayat Barang Masuk -->
+  <div id="modal-log-restok" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-5 space-y-4 max-h-[80vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-base">📋 Log Audit Riwayat Barang Masuk</h3>
+        <button onclick="document.getElementById('modal-log-restok').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold">✕</button>
+      </div>
+      <div class="overflow-y-auto flex-1">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="py-2">Tanggal & Jam</th>
+              <th class="py-2">Nama Menu</th>
+              <th class="py-2">Tambahan</th>
+              <th class="py-2">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="isi-log-restok" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc, increment, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // TEMPEL KONFIGURASI FIREBASE YANG SAMA DI SINI
+    const firebaseConfig = {
+      apiKey: "ISI_API_KEY_KAMU",
+      authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+      projectId: "ISI_PROJECT_ID",
+      storageBucket: "ISI_PROJECT_ID.appspot.com",
+      messagingSenderId: "ISI_SENDER_ID",
+      appId: "ISI_APP_ID"
+    };
+
+    const PIN_OWNER = "168168"; // Ganti PIN Owner di sini
+
+    window.cekPin = () => {
+      if (document.getElementById('input-pin').value === PIN_OWNER) {
+        document.getElementById('layar-pin').classList.add('hidden');
+      } else {
+        alert('PIN Salah!');
+      }
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let semuaMenu = [];
+    let semuaTransaksi = [];
+
+    // 1. Listen Menu Realtime
+    onSnapshot(collection(db, "menu"), (snap) => {
+      semuaMenu = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderTabelMenu();
+    });
+
+    function renderTabelMenu() {
+      const tbody = document.getElementById('tabel-menu');
+      const selectRestok = document.getElementById('pilih-restok-menu');
+      tbody.innerHTML = '';
+      selectRestok.innerHTML = '';
+
+      semuaMenu.forEach(m => {
+        selectRestok.innerHTML += `<option value="${m.id}">${m.nama} (Sisa: ${m.stok})</option>`;
+        tbody.innerHTML += `
+          <tr>
+            <td class="py-2.5 font-semibold">${m.nama}</td>
+            <td class="py-2.5 text-slate-400">${m.kategori}</td>
+            <td class="py-2.5">
+              <input type="number" id="harga-${m.id}" value="${m.harga}" class="w-24 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
+            </td>
+            <td class="py-2.5">
+              <input type="number" id="stok-${m.id}" value="${m.stok}" class="w-20 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
+            </td>
+            <td class="py-2.5 text-right space-x-1">
+              <button onclick="updateMenu('${m.id}')" class="bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 px-2.5 py-1 rounded text-xs font-bold">✓ Simpan</button>
+              <button onclick="hapusMenu('${m.id}')" class="bg-rose-600/20 text-rose-400 border border-rose-600/40 px-2.5 py-1 rounded text-xs font-bold">Hapus</button>
+            </td>
+          </tr>
+        `;
       });
-      excelData.push(["", "TOTAL PENGELUARAN", "", "", "", totalExpense]);
-      excelData.push([""]);
-
-      excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
-      excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
-
-      restocks.forEach(log => {
-        excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
-      });
-      excelData.push([""]);
-
-      excelData.push(["--- RINGKASAN LABA RUGI ---"]);
-      excelData.push(["Total Omset Penjualan", totalOmset]);
-      excelData.push(["Total Pengeluaran Operasional", totalExpense]);
-      excelData.push(["LABA BERSIH", netProfit]);
-
-      const ws = XLSX.utils.aoa_to_sheet(excelData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Laporan Owner");
-
-      const fileName = `Laporan_Owner_Warkop_${new Date().toISOString().split('T')[0]}.xlsx`;
-      XLSX.writeFile(wb, fileName);
     }
+
+    window.tambahMenu = async () => {
+      const nama = document.getElementById('baru-nama').value.trim();
+      const harga = Number(document.getElementById('baru-harga').value);
+      const kategori = document.getElementById('baru-kategori').value;
+      const stok = Number(document.getElementById('baru-stok').value);
+      if (!nama || !harga) return alert('Nama dan harga wajib diisi!');
+
+      await addDoc(collection(db, "menu"), { nama, harga, kategori, stok: stok || 0 });
+      document.getElementById('baru-nama').value = '';
+      document.getElementById('baru-harga').value = '';
+      document.getElementById('baru-stok').value = '';
+    };
+
+    window.updateMenu = async (id) => {
+      const harga = Number(document.getElementById(`harga-${id}`).value);
+      const stok = Number(document.getElementById(`stok-${id}`).value);
+      await updateDoc(doc(db, "menu", id), { harga, stok });
+      alert('Menu diperbarui!');
+    };
+
+    window.hapusMenu = async (id) => {
+      if (confirm('Yakin hapus menu ini?')) await deleteDoc(doc(db, "menu", id));
+    };
+
+    window.simpanQris = async () => {
+      const qrisUrl = document.getElementById('input-qris').value.trim();
+      await setDoc(doc(db, "pengaturan", "toko"), { qrisUrl }, { merge: true });
+      alert('Link QRIS disimpan!');
+    };
+
+    window.prosesRestok = async () => {
+      const menuId = document.getElementById('pilih-restok-menu').value;
+      const jumlah = Number(document.getElementById('jumlah-restok').value);
+      const keterangan = document.getElementById('ket-restok').value.trim() || 'Restok rutin';
+      if (!menuId || jumlah <= 0) return alert('Pilih menu dan isi jumlah tambah stok!');
+
+      const menuObj = semuaMenu.find(m => m.id === menuId);
+      await updateDoc(doc(db, "menu", menuId), { stok: increment(jumlah) });
+      await addDoc(collection(db, "log_restok"), {
+        menuNama: menuObj ? menuObj.nama : menuId,
+        jumlah,
+        keterangan,
+        waktu: serverTimestamp()
+      });
+
+      document.getElementById('jumlah-restok').value = '';
+      document.getElementById('ket-restok').value = '';
+      alert('Stok berhasil ditambahkan & tercatat di Log Audit!');
+    };
+
+    window.bukaLogRestok = () => {
+      document.getElementById('modal-log-restok').classList.remove('hidden');
+      onSnapshot(query(collection(db, "log_restok"), orderBy("waktu", "desc")), (snap) => {
+        const tbody = document.getElementById('isi-log-restok');
+        tbody.innerHTML = '';
+        snap.docs.forEach(d => {
+          const data = d.data();
+          const tgl = data.waktu ? data.waktu.toDate().toLocaleString('id-ID') : 'Baru saja';
+          tbody.innerHTML += `
+            <tr>
+              <td class="py-2 text-slate-400">${tgl}</td>
+              <td class="py-2 font-semibold">${data.menuNama}</td>
+              <td class="py-2 text-emerald-400 font-bold">+${data.jumlah}</td>
+              <td class="py-2 text-slate-300">${data.keterangan}</td>
+            </tr>
+          `;
+        });
+      });
+    };
+
+    // 2. Listen Transaksi Realtime & Deteksi Anomali Rapel / Jam Kosong
+    onSnapshot(query(collection(db, "transaksi"), orderBy("serverTime", "desc")), (snap) => {
+      semuaTransaksi = snap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+        ms: d.data().serverTime ? d.data().serverTime.toMillis() : Date.now()
+      }));
+      analisaDanRenderTransaksi();
+    });
+
+    function analisaDanRenderTransaksi() {
+      const sekarang = new Date();
+      const awalHari = new Date(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate()).getTime();
+      const trxHariIni = semuaTransaksi.filter(t => t.ms >= awalHari);
+
+      let omzet = 0, tunai = 0, qris = 0;
+      const hitungPerJam = new Array(24).fill(0);
+
+      trxHariIni.forEach(t => {
+        omzet += t.total;
+        if (t.metode === 'Tunai') tunai += t.total;
+        else qris += t.total;
+        const jam = new Date(t.ms).getHours();
+        hitungPerJam[jam]++;
+      });
+
+      document.getElementById('stat-omzet').innerText = 'Rp ' + omzet.toLocaleString('id-ID');
+      document.getElementById('stat-faktur').innerText = trxHariIni.length + ' Faktur';
+      document.getElementById('stat-metode').innerText = `Rp ${tunai.toLocaleString('id-ID')} / Rp ${qris.toLocaleString('id-ID')}`;
+
+      // Deteksi Burst Alert (Rapel: >= 4 faktur dalam rentang 3 menit / 180.000 ms)
+      const flaggedIds = new Set();
+      for (let i = 0; i < trxHariIni.length; i++) {
+        const kelompok = trxHariIni.filter(t => Math.abs(t.ms - trxHariIni[i].ms) <= 180000);
+        if (kelompok.length >= 4) {
+          kelompok.forEach(k => flaggedIds.add(k.id));
+        }
+      }
+
+      // Cek Idle Alert (Sepi > 60 menit di jam operasional 08:00 - 22:00)
+      const jamSekarang = sekarang.getHours();
+      const alerts = [];
+      if (flaggedIds.size > 0) {
+        alerts.push(`Terdeteksi ${flaggedIds.size} faktur diinput secara rapel (≥4 transaksi dalam waktu <3 menit).`);
+        document.getElementById('stat-rapel').innerHTML = `<span class="text-rose-400">⚠️ ${flaggedIds.size} Faktur Rapel!</span>`;
+      } else {
+        document.getElementById('stat-rapel').innerText = 'Aman (0 Indikasi)';
+      }
+
+      if (jamSekarang >= 8 && jamSekarang <= 22) {
+        const terakhir = trxHariIni.length > 0 ? trxHariIni[0].ms : awalHari + (8 * 3600000);
+        const selisihMenit = Math.floor((Date.now() - terakhir) / 60000);
+        if (selisihMenit >= 60) {
+          alerts.push(`Belum ada transaksi baru masuk selama ${selisihMenit} menit terakhir di jam operasional.`);
+        }
+      }
+
+      const panelAlert = document.getElementById('panel-alert');
+      const listAlert = document.getElementById('list-alert');
+      if (alerts.length > 0) {
+        panelAlert.classList.remove('hidden');
+        listAlert.innerHTML = alerts.map(a => `<li>${a}</li>`).join('');
+      } else {
+        panelAlert.classList.add('hidden');
+      }
+
+      // Render Grafik Distribusi Jam (08:00 - 23:00)
+      const grafik = document.getElementById('grafik-jam');
+      const maxJam = Math.max(...hitungPerJam.slice(8, 24), 1);
+      grafik.innerHTML = '';
+      for (let j = 8; j <= 23; j++) {
+        const tinggi = Math.round((hitungPerJam[j] / maxJam) * 100);
+        grafik.innerHTML += `
+          <div class="flex flex-col items-center h-full justify-end">
+            <span class="text-[9px] text-slate-400 mb-1">${hitungPerJam[j] || ''}</span>
+            <div class="w-full rounded-t ${hitungPerJam[j] > 0 ? 'bg-amber-400' : 'bg-slate-800'}" style="height: ${Math.max(tinggi, 6)}%"></div>
+            <span class="text-[9px] text-slate-500 mt-1">${String(j).padStart(2, '0')}</span>
+          </div>
+        `;
+      }
+
+      // Render Tabel Log Transaksi
+      const tbody = document.getElementById('tabel-transaksi');
+      tbody.innerHTML = '';
+      trxHariIni.forEach(t => {
+        const isRapel = flaggedIds.has(t.id);
+        const waktuStr = new Date(t.ms).toLocaleTimeString('id-ID');
+        const ringkasanItem = t.items.map(i => `${i.nama} (${i.qty}x)`).join(', ');
+        tbody.innerHTML += `
+          <tr class="${isRapel ? 'bg-rose-950/50 text-rose-200' : ''}">
+            <td class="py-2.5 font-mono font-bold">${waktuStr}</td>
+            <td class="py-2.5">${t.kasir}</td>
+            <td class="py-2.5">${ringkasanItem}</td>
+            <td class="py-2.5">${t.metode}</td>
+            <td class="py-2.5 font-bold text-amber-400">Rp ${t.total.toLocaleString('id-ID')}</td>
+            <td class="py-2.5">
+              ${isRapel 
+                ? '<span class="bg-rose-600 text-white px-2 py-0.5 rounded font-bold">🚨 INDIKASI RAPEL</span>' 
+                : '<span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">✓ Normal</span>'}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    // Export Excel (CSV)
+    window.downloadExcel = () => {
+      let csv = "Waktu Server,Kasir,Metode,Total,Item Pesanan\n";
+      semuaTransaksi.forEach(t => {
+        const waktu = new Date(t.ms).toLocaleString('id-ID').replace(',', '');
+        const items = t.items.map(i => `${i.nama} x${i.qty}`).join(' | ');
+        csv += `"${waktu}","${t.kasir}","${t.metode}",${t.total},"${items}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Laporan_Warkop168_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    };
   </script>
 </body>
 </html>
