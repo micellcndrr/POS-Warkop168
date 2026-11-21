@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kasir Warkop Pancong 168 - Cloud POS</title>
+  <title>Warkop Pancong 168</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Firebase SDK (Cloud Real-Time Sync) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -14,13 +14,28 @@
     .container { display: flex; width: 100%; height: 100%; overflow: hidden; }
 
     .menu-panel { flex: 2; padding: 16px; overflow-y: auto; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; flex-wrap: wrap; }
     .header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .header-title { font-size: 22px; font-weight: 700; color: #0f172a; }
     .cloud-badge { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 700; background: #fef9c3; color: #a16207; }
     .cloud-badge.online { background: #dcfce7; color: #15803d; }
     .cloud-badge.offline { background: #fee2e2; color: #b91c1c; }
     .btn-header { background: #0f172a; color: #ffffff; padding: 8px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    .idle-alert-banner {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #f87171;
+      color: #b91c1c;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
 
     .search-box { margin-bottom: 12px; }
     .categories { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -40,7 +55,8 @@
     .stock-badge.empty { background: #fee2e2; color: #b91c1c; }
 
     .cart-panel { flex: 1; min-width: 300px; max-width: 360px; background: #ffffff; display: flex; flex-direction: column; padding: 16px; box-shadow: -2px 0 10px rgba(0, 0, 0, 0.03); }
-    .cart-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; }
+    .cart-title { font-size: 17px; font-weight: 700; margin-bottom: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .lock-pill { font-size: 10px; background: #fef3c7; color: #92400e; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
     .cart-items { flex: 1; overflow-y: auto; margin-bottom: 10px; }
     .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #e2e8f0; }
     .cart-item-name { font-size: 12px; font-weight: 600; }
@@ -48,6 +64,7 @@
 
     .qty-controls { display: flex; align-items: center; gap: 6px; }
     .btn-qty { background: #f1f5f9; border: 1px solid #cbd5e1; width: 24px; height: 24px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    .btn-qty.locked-minus { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
 
     .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 10px; }
     .row-summary.total { font-weight: 700; font-size: 16px; color: #16a34a; margin-bottom: 10px; display: flex; justify-content: space-between; }
@@ -76,6 +93,29 @@
 
     .admin-section-box { margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
     .admin-section-title { font-weight: 700; font-size: 12px; margin-bottom: 8px; color: #0f172a; display: flex; align-items: center; justify-content: space-between; }
+
+    .void-pin-card {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .void-pin-code {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: #dc2626;
+      background: #fff;
+      padding: 4px 12px;
+      border-radius: 6px;
+      border: 1px dashed #f87171;
+    }
 
     .admin-form-grid-4 { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 8px; }
     .admin-form-grid-5 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 8px; }
@@ -107,13 +147,22 @@
 
     #receiptPrintArea { display: none; }
     @media print {
+      @page {
+        size: 58mm auto;
+        margin: 0mm;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+      }
       body * { visibility: hidden; }
       #receiptPrintArea, #receiptPrintArea * { visibility: visible; }
       #receiptPrintArea {
         display: block !important;
         position: absolute; left: 0; top: 0; width: 58mm;
-        padding: 4px 2px; font-family: 'Courier New', Courier, monospace;
-        font-size: 10px; color: #000; background: #fff; line-height: 1.2;
+        padding: 3mm 2mm; font-family: 'Courier New', Courier, monospace;
+        font-size: 10px; color: #000; background: #fff; line-height: 1.25;
       }
       .receipt-header, .receipt-footer { text-align: center; }
       .receipt-divider { border-top: 1px dashed #000; margin: 5px 0; }
@@ -132,6 +181,12 @@
           <span id="cloudStatusBadge" class="cloud-badge">⏳ Menghubungkan Cloud...</span>
         </div>
         <button class="btn-header" onclick="loginAdmin()">🔑 Dashboard Owner</button>
+      </div>
+
+      <!-- Notifikasi Tanpa Pesanan (30 Menit) -->
+      <div id="idleAlertBanner" class="idle-alert-banner">
+        <span id="idleAlertText">⚠️ Tidak ada pesanan masuk selama 30 menit terakhir.</span>
+        <button onclick="dismissIdleAlert()" style="background:#b91c1c; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:11px; cursor:pointer;">Tutup</button>
       </div>
       
       <div class="search-box">
@@ -158,7 +213,10 @@
     </div>
 
     <div class="cart-panel">
-      <h2 class="cart-title">Pesanan</h2>
+      <h2 class="cart-title">
+        <span>Pesanan</span>
+        <span class="lock-pill">🔒 Void Terkunci</span>
+      </h2>
       <div class="cart-items" id="cartItems">
         <p style="text-align: center; color: #94a3b8; margin-top: 20px;">Belum ada pesanan</p>
       </div>
@@ -173,7 +231,7 @@
         <button class="btn-action btn-forecast" onclick="openForecastModal()">📈 Forecast Penjualan</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran</button>
         <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Tutup Buku Bulanan</button>
-        <button class="btn-action btn-clear" onclick="clearCart()">Kosongkan Keranjang</button>
+        <button class="btn-action btn-clear" onclick="requestClearCartWithPin()">🔒 Kosongkan Keranjang</button>
       </div>
     </div>
   </div>
@@ -370,6 +428,18 @@
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
         <h3>🔑 Dashboard Owner (Cloud Real-Time)</h3>
         <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
+      </div>
+
+      <!-- PIN Void Acak 4 Angka (Otomatis Berubah Setelah Dipakai) -->
+      <div class="void-pin-card">
+        <div>
+          <div style="font-size:12px; font-weight:700; color:#991b1b;">🔐 PIN Void / Hapus Pesanan Kasir (4 Angka Acak)</div>
+          <div style="font-size:11px; color:#7f1d1d;">Otomatis teracak ulang setelah dipakai mengurangi/menghapus keranjang.</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="ownerVoidPinDisplay" class="void-pin-code">----</span>
+          <button type="button" onclick="regenerateVoidPin(true)" style="background:#dc2626; color:#fff; border:none; padding:8px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer;">🔄 Acak Baru</button>
+        </div>
       </div>
 
       <!-- Tambah Stok / Barang Masuk -->
@@ -594,7 +664,7 @@
     ];
 
     /* =================================================================
-       2. KONFIGURASI FIREBASE CLOUD (SUDAH TERHUBUNG KE PROJECT ANDA)
+       2. KONFIGURASI FIREBASE CLOUD
        ================================================================= */
     const firebaseConfig = {
       databaseURL: "https://warkoppancong168-dea1a-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -624,8 +694,91 @@
 
     const adminPin = '4M112208';
 
+    // PIN Void 4 Angka Acak (untuk kurangi / hapus keranjang)
+    function generateRandom4DigitPin() {
+      return Math.floor(1000 + Math.random() * 9000).toString();
+    }
+
+    let currentVoidPin = localStorage.getItem('warkop_void_pin') || generateRandom4DigitPin();
+    localStorage.setItem('warkop_void_pin', currentVoidPin);
+
+    // Timer Notifikasi Tanpa Pesanan (30 Menit)
+    const IDLE_LIMIT_MS = 30 * 60 * 1000; // 30 Menit
+    let lastOrderTime = parseInt(localStorage.getItem('warkop_last_order_time')) || Date.now();
+    let idlePopupShownForCurrentCycle = false;
+
+    function updateVoidPinUI() {
+      const el = document.getElementById('ownerVoidPinDisplay');
+      if (el) el.innerText = currentVoidPin;
+    }
+
+    function regenerateVoidPin(showNotif = false) {
+      currentVoidPin = generateRandom4DigitPin();
+      localStorage.setItem('warkop_void_pin', currentVoidPin);
+      if (isCloudReady && db) {
+        db.ref('warkop_data/voidPin').set(currentVoidPin);
+      }
+      updateVoidPinUI();
+      if (showNotif) {
+        alert(`PIN Void baru berhasil diacak: ${currentVoidPin}`);
+      }
+    }
+
+    function verifyVoidPin() {
+      const entered = prompt('🔒 Terkunci! Masukkan PIN Owner 4 Angka untuk mengubah/menghapus pesanan:');
+      if (entered === null) return false;
+      if (entered.trim() === currentVoidPin) {
+        // Otomatis acak PIN baru setelah dipakai agar tidak bisa dipakai ulang kasir
+        regenerateVoidPin(false);
+        return true;
+      } else {
+        alert('❌ PIN Owner 4 Angka Salah! Perubahan pesanan dibatalkan.');
+        return false;
+      }
+    }
+
+    function resetIdleOrderTimer() {
+      lastOrderTime = Date.now();
+      idlePopupShownForCurrentCycle = false;
+      localStorage.setItem('warkop_last_order_time', lastOrderTime.toString());
+      if (isCloudReady && db) {
+        db.ref('warkop_data/lastOrderTime').set(lastOrderTime);
+      }
+      const banner = document.getElementById('idleAlertBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    function dismissIdleAlert() {
+      const banner = document.getElementById('idleAlertBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    function checkIdleOrderTimer() {
+      const now = Date.now();
+      const diffMs = now - lastOrderTime;
+      if (diffMs >= IDLE_LIMIT_MS) {
+        const diffMins = Math.floor(diffMs / 60000);
+        const lastDate = new Date(lastOrderTime);
+        const timeStr = lastDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        const banner = document.getElementById('idleAlertBanner');
+        const textEl = document.getElementById('idleAlertText');
+        if (banner && textEl) {
+          textEl.innerText = `⚠️ Peringatan: Belum ada pesanan masuk selama ${diffMins} menit (Transaksi terakhir pukul ${timeStr}).`;
+          banner.style.display = 'flex';
+        }
+
+        if (!idlePopupShownForCurrentCycle) {
+          idlePopupShownForCurrentCycle = true;
+          alert(`⚠️ Notifikasi Warkop Pancong 168:\nSudah ${diffMins} menit tidak ada pesanan masuk (terakhir pukul ${timeStr}).`);
+        }
+      }
+    }
+
+    setInterval(checkIdleOrderTimer, 10000);
+
     /* =================================================================
-       3. REAL-TIME LISTENER CLOUD <-> SEMUA PERANGKAT (LAPTOP/IPAD/HP)
+       3. REAL-TIME LISTENER CLOUD <-> SEMUA PERANGKAT
        ================================================================= */
     if (isCloudReady && db) {
       db.ref('.info/connected').on('value', (snap) => {
@@ -639,14 +792,12 @@
         }
       });
 
-      // Sinkronisasi Menu & Stok secara Real-Time
       db.ref('warkop_data/products').on('value', (snapshot) => {
         const cloudProducts = snapshot.val();
         if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
           products = cloudProducts;
           localStorage.setItem('warkop_products', JSON.stringify(products));
         } else {
-          // Saat Cloud pertama kali masih kosong, otomatis unggah 117 menu ke Firebase Cloud
           db.ref('warkop_data/products').set(products);
           localStorage.setItem('warkop_products', JSON.stringify(products));
         }
@@ -657,14 +808,34 @@
         }
       });
 
-      // Sinkronisasi Transaksi Bulanan
+      db.ref('warkop_data/voidPin').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val && /^\d{4}$/.test(val)) {
+          currentVoidPin = val;
+          localStorage.setItem('warkop_void_pin', currentVoidPin);
+          updateVoidPinUI();
+        } else {
+          db.ref('warkop_data/voidPin').set(currentVoidPin);
+        }
+      });
+
+      db.ref('warkop_data/lastOrderTime').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val && typeof val === 'number' && val > lastOrderTime) {
+          lastOrderTime = val;
+          idlePopupShownForCurrentCycle = false;
+          localStorage.setItem('warkop_last_order_time', lastOrderTime.toString());
+          const banner = document.getElementById('idleAlertBanner');
+          if (banner) banner.style.display = 'none';
+        }
+      });
+
       db.ref('warkop_data/monthlyTransactions').on('value', (snapshot) => {
         const val = snapshot.val();
         monthlyTransactions = Array.isArray(val) ? val : [];
         localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
       });
 
-      // Sinkronisasi Pengeluaran Bulanan
       db.ref('warkop_data/monthlyExpenses').on('value', (snapshot) => {
         const val = snapshot.val();
         monthlyExpenses = Array.isArray(val) ? val : [];
@@ -674,14 +845,12 @@
         }
       });
 
-      // Sinkronisasi Log Restok
       db.ref('warkop_data/restockLogs').on('value', (snapshot) => {
         const val = snapshot.val();
         restockLogs = Array.isArray(val) ? val : [];
         localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
       });
 
-      // Sinkronisasi URL QRIS
       db.ref('warkop_data/qrisUrl').on('value', (snapshot) => {
         const val = snapshot.val();
         if (val) {
@@ -725,6 +894,7 @@
     function loginAdmin() {
       const inputPin = prompt('Masukkan PIN Owner / Admin:');
       if (inputPin === adminPin) {
+        updateVoidPinUI();
         renderAdminStockTable();
         populateRestockSelect();
         document.getElementById('qrisUrlInput').value = savedQrisUrl;
@@ -813,6 +983,11 @@
       const product = products.find(p => p.id === id);
 
       if (item && product) {
+        // Kunci pengurangan/hapus item di keranjang dengan PIN Owner 4 angka acak
+        if (delta < 0) {
+          if (!verifyVoidPin()) return;
+        }
+
         const nextQty = item.qty + delta;
         if (delta > 0 && nextQty > product.stock) {
           alert(`Stok menu ${product.name} tidak mencukupi! Sisa stok: ${product.stock}`);
@@ -838,7 +1013,7 @@
                 <div class="cart-item-sub">Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</div>
               </div>
               <div class="qty-controls">
-                <button class="btn-qty" onclick="changeQty(${item.id}, -1)">-</button>
+                <button class="btn-qty locked-minus" title="Butuh PIN Owner" onclick="changeQty(${item.id}, -1)">-</button>
                 <span style="font-weight:600;">${item.qty}</span>
                 <button class="btn-qty" onclick="changeQty(${item.id}, 1)">+</button>
               </div>
@@ -940,7 +1115,7 @@
           <h2 style="font-size:13px; font-weight:bold; margin-bottom:2px;">WARKOP PANCONG 168</h2>
           <p style="font-size:9px;">Kopi, Pancong Lumer & Hangout</p>
           <p style="font-size:9px;">Jl. Raya Depok No. 168</p>
-          <p style="font-size:9px;">Telp/WA: 0812-3456-7890</p>
+          <p style="font-size:9px;">Telp/WA: 081510222645</p>
         </div>
         
         <div class="receipt-divider"></div>
@@ -1003,11 +1178,8 @@
         <div class="receipt-divider"></div>
 
         <div class="receipt-footer">
-          <p style="font-weight:bold; margin-bottom:2px;">Wi-Fi: Pancong168_Guest</p>
-          <p style="margin-bottom:4px;">Pass: nongkrong168</p>
-          <p style="font-size:9px;">IG: @warkoppancong168</p>
           <p style="margin-top:4px;">Terima kasih atas kunjungan Anda!</p>
-          <p>Kritik & Saran: 0812-3456-7890</p>
+          <p>Kritik & Saran: 081510222645</p>
         </div>
       `;
 
@@ -1031,7 +1203,7 @@
 
       executeTransaction('Tunai');
       closePaymentModal();
-      clearCart();
+      clearCartSilent();
     }
 
     function confirmNonCashPayment(methodName) {
@@ -1040,7 +1212,7 @@
       }
       executeTransaction(methodName);
       closePaymentModal();
-      clearCart();
+      clearCartSilent();
     }
 
     function confirmTransferPayment() {
@@ -1051,7 +1223,7 @@
       }
       executeTransaction(methodLabel);
       closePaymentModal();
-      clearCart();
+      clearCartSilent();
     }
 
     function confirmDebitPayment() {
@@ -1062,7 +1234,7 @@
       }
       executeTransaction(methodLabel);
       closePaymentModal();
-      clearCart();
+      clearCartSilent();
     }
 
     function executeTransaction(method) {
@@ -1088,13 +1260,27 @@
 
       saveProducts();
       saveTransactionsToCloud();
+      resetIdleOrderTimer();
     }
 
-    function clearCart() {
+    // Kosongkan keranjang otomatis setelah pembayaran sukses
+    function clearCartSilent() {
       cart = [];
       document.getElementById('cashAmountInput').value = '';
       document.getElementById('cashChangeText').innerText = 'Rp 0';
       updateCart();
+    }
+
+    // Tombol manual Kosongkan Keranjang (Wajib PIN Owner 4 Angka)
+    function requestClearCartWithPin() {
+      if (cart.length === 0) {
+        alert('Keranjang sudah kosong.');
+        return;
+      }
+      if (verifyVoidPin()) {
+        clearCartSilent();
+        alert('✅ Keranjang berhasil dikosongkan.');
+      }
     }
 
     /* FORECAST PENJUALAN */
