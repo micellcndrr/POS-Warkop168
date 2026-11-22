@@ -746,8 +746,9 @@
 
       let maxSeq = 0;
       monthlyTransactions.forEach(tx => {
-        if (tx.NoFaktur && tx.NoFaktur.startsWith(prefix)) {
-          const seqPart = parseInt(tx.NoFaktur.replace(prefix, ''), 10);
+        const faktur = String(tx.NoFaktur || '').trim();
+        if (faktur.startsWith(prefix)) {
+          const seqPart = parseInt(faktur.replace(prefix, ''), 10);
           if (!isNaN(seqPart) && seqPart > maxSeq) {
             maxSeq = seqPart;
           }
@@ -843,6 +844,9 @@
     /* =================================================================
        3. REAL-TIME LISTENER CLOUD <-> SEMUA PERANGKAT
        ================================================================= */
+    let isInitialTxLoad = true;
+    let isInitialExpLoad = true;
+
     if (isCloudReady && db) {
       db.ref('.info/connected').on('value', (snap) => {
         const badge = document.getElementById('cloudStatusBadge');
@@ -894,32 +898,36 @@
       });
 
       db.ref('warkop_data/monthlyTransactions').on('value', (snapshot) => {
-        const cloudTx = toArraySafe(snapshot.val());
-        if (cloudTx.length > 0) {
+        const rawVal = snapshot.val();
+        const cloudTx = toArraySafe(rawVal);
+        if (rawVal !== null) {
           monthlyTransactions = cloudTx;
           localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
-        } else if (monthlyTransactions.length > 0) {
+        } else if (isInitialTxLoad && monthlyTransactions.length > 0) {
           db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
         } else {
           monthlyTransactions = [];
           localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
         }
+        isInitialTxLoad = false;
         if (document.getElementById('historyModal').style.display === 'flex') {
           renderHistoryTable();
         }
       });
 
       db.ref('warkop_data/monthlyExpenses').on('value', (snapshot) => {
-        const cloudExp = toArraySafe(snapshot.val());
-        if (cloudExp.length > 0) {
+        const rawVal = snapshot.val();
+        const cloudExp = toArraySafe(rawVal);
+        if (rawVal !== null) {
           monthlyExpenses = cloudExp;
           localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
-        } else if (monthlyExpenses.length > 0) {
+        } else if (isInitialExpLoad && monthlyExpenses.length > 0) {
           db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
         } else {
           monthlyExpenses = [];
           localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
         }
+        isInitialExpLoad = false;
         if (document.getElementById('expenseModal').style.display === 'flex') {
           renderExpenseTable();
         }
@@ -960,14 +968,14 @@
     function saveTransactionsToCloud() {
       localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
       if (isCloudReady && db) {
-        db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
+        db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions.length > 0 ? monthlyTransactions : null);
       }
     }
 
     function saveExpensesToCloud() {
       localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       if (isCloudReady && db) {
-        db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
+        db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses.length > 0 ? monthlyExpenses : null);
       }
     }
 
@@ -1272,12 +1280,14 @@
       window.print();
     }
 
-    function reprintInvoiceByNo(invoiceNo) {
-      const matched = monthlyTransactions.filter(tx => (tx.NoFaktur || '-') === invoiceNo);
-      if (matched.length === 0) {
-        alert('Data faktur tidak ditemukan.');
-        return;
-      }
+    function reprintTransactionRow(originalIndex) {
+      const targetTx = monthlyTransactions[originalIndex];
+      if (!targetTx) return;
+
+      const invoiceNo = String(targetTx.NoFaktur || '').trim();
+      const matched = (invoiceNo && invoiceNo !== '-')
+        ? monthlyTransactions.filter(tx => String(tx.NoFaktur || '').trim() === invoiceNo)
+        : [targetTx];
 
       const itemsList = matched.map(tx => ({
         name: tx.Menu,
@@ -1311,7 +1321,7 @@
           <p style="font-size:9px; font-weight:bold; margin-top:2px;">[CETAK ULANG FAKTUR]</p>
         </div>
         <div class="receipt-divider"></div>
-        <div class="receipt-row"><span>No. Faktur:</span><span style="font-weight:bold;">${invoiceNo}</span></div>
+        <div class="receipt-row"><span>No. Faktur:</span><span style="font-weight:bold;">${invoiceNo || '-'}</span></div>
         <div class="receipt-row"><span>Tanggal   :</span><span>${matched[0].Tanggal}</span></div>
         <div class="receipt-row"><span>Waktu     :</span><span>${matched[0].Waktu || '-'}</span></div>
         <div class="receipt-divider"></div>
@@ -1329,26 +1339,34 @@
       window.print();
     }
 
-    function deleteInvoiceByNo(invoiceNo) {
-      const enteredPin = prompt(`🔒 Masukkan PIN Owner untuk menghapus Faktur ${invoiceNo}:`);
+    function deleteTransactionRow(originalIndex) {
+      const targetTx = monthlyTransactions[originalIndex];
+      if (!targetTx) {
+        alert('Data transaksi sudah terhapus atau tidak ditemukan.');
+        renderHistoryTable();
+        return;
+      }
+
+      const invoiceNo = String(targetTx.NoFaktur || '').trim();
+      const hasValidInvoice = invoiceNo !== '' && invoiceNo !== '-';
+
+      const enteredPin = prompt(`🔒 Masukkan PIN Owner untuk menghapus transaksi${hasValidInvoice ? ' Faktur ' + invoiceNo : ' "' + targetTx.Menu + '"'}:`);
       if (enteredPin === null) return;
-      if (enteredPin !== adminPin) {
-        alert('❌ PIN Owner Salah! Penghapusan faktur dibatalkan.');
+      if (enteredPin.trim() !== adminPin) {
+        alert('❌ PIN Owner Salah! Penghapusan dibatalkan.');
         return;
       }
 
-      const matched = monthlyTransactions.filter(tx => (tx.NoFaktur || '-') === invoiceNo);
-      if (matched.length === 0) {
-        alert('Data faktur tidak ditemukan.');
+      const matched = hasValidInvoice
+        ? monthlyTransactions.filter(tx => String(tx.NoFaktur || '').trim() === invoiceNo)
+        : [targetTx];
+
+      const itemSummary = matched.map(m => `- ${m.Menu} (${m.Qty}x) = Rp ${(m.Total || 0).toLocaleString('id-ID')}`).join('\n');
+      if (!confirm(`Yakin ingin menghapus transaksi ini?\n\nDetail:\n${itemSummary}`)) {
         return;
       }
 
-      const itemSummary = matched.map(m => `- ${m.Menu} (${m.Qty}x)`).join('\n');
-      if (!confirm(`Yakin ingin menghapus seluruh transaksi pada faktur ${invoiceNo}?\n\nDetail item:\n${itemSummary}`)) {
-        return;
-      }
-
-      const restoreStock = confirm('Apakah stok menu dari transaksi tes ini ingin dikembalikan otomatis?\n\n• OK = Hapus Faktur & Kembalikan Stok\n• Cancel = Hapus Faktur Saja (Stok Tetap)');
+      const restoreStock = confirm('Apakah stok menu dari transaksi tes ini ingin dikembalikan otomatis?\n\n• OK = Hapus & Kembalikan Stok\n• Cancel = Hapus Saja (Stok Tetap)');
       if (restoreStock) {
         matched.forEach(tx => {
           const prod = products.find(p => p.name === tx.Menu);
@@ -1359,40 +1377,15 @@
         saveProducts();
       }
 
-      monthlyTransactions = monthlyTransactions.filter(tx => (tx.NoFaktur || '-') !== invoiceNo);
+      if (hasValidInvoice) {
+        monthlyTransactions = monthlyTransactions.filter(tx => String(tx.NoFaktur || '').trim() !== invoiceNo);
+      } else {
+        monthlyTransactions.splice(originalIndex, 1);
+      }
+
       saveTransactionsToCloud();
       renderHistoryTable();
-      alert(`✅ Faktur ${invoiceNo} berhasil dihapus${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
-    }
-
-    function deleteLegacyTxByIndex(originalIndex) {
-      const tx = monthlyTransactions[originalIndex];
-      if (!tx) return;
-
-      const enteredPin = prompt(`🔒 Masukkan PIN Owner untuk menghapus transaksi "${tx.Menu}":`);
-      if (enteredPin === null) return;
-      if (enteredPin !== adminPin) {
-        alert('❌ PIN Owner Salah! Penghapusan transaksi dibatalkan.');
-        return;
-      }
-
-      if (!confirm(`Yakin ingin menghapus transaksi tes:\n${tx.Menu} (${tx.Qty}x) - Rp ${tx.Total.toLocaleString('id-ID')}?`)) {
-        return;
-      }
-
-      const restoreStock = confirm('Apakah stok menu ini ingin dikembalikan otomatis?\n\n• OK = Hapus & Kembalikan Stok\n• Cancel = Hapus Saja');
-      if (restoreStock) {
-        const prod = products.find(p => p.name === tx.Menu);
-        if (prod) {
-          prod.stock += (tx.Qty || 0);
-          saveProducts();
-        }
-      }
-
-      monthlyTransactions.splice(originalIndex, 1);
-      saveTransactionsToCloud();
-      renderHistoryTable();
-      alert('✅ Transaksi tes berhasil dihapus.');
+      alert(`✅ Transaksi berhasil dihapus${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
     }
 
     function confirmCashPayment() {
@@ -1650,13 +1643,13 @@
 
       const indexedTx = monthlyTransactions.map((tx, idx) => ({ tx, idx }));
       indexedTx.forEach(({ tx }) => {
-        totalOmset += tx.Total;
+        totalOmset += (tx.Total || 0);
       });
 
       const filteredTx = indexedTx.filter(({ tx }) => {
         if (!query) return true;
-        const faktur = (tx.NoFaktur || '').toLowerCase();
-        const menu = (tx.Menu || '').toLowerCase();
+        const faktur = String(tx.NoFaktur || '').toLowerCase();
+        const menu = String(tx.Menu || '').toLowerCase();
         return faktur.includes(query) || menu.includes(query);
       });
 
@@ -1665,14 +1658,8 @@
       } else {
         // Tampilkan transaksi terbaru di bagian paling atas
         [...filteredTx].reverse().forEach(({ tx, idx }) => {
-          const noFaktur = tx.NoFaktur || '-';
+          const noFaktur = String(tx.NoFaktur || '').trim() || '-';
           const waktuText = tx.Waktu ? `${tx.Tanggal} (${tx.Waktu})` : tx.Tanggal;
-          const actionButtons = noFaktur !== '-'
-            ? `<div class="action-btn-group">
-                <button onclick="reprintInvoiceByNo('${noFaktur}')" title="Cetak Ulang Struk Faktur Ini" style="background:#0f172a; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>
-                <button onclick="deleteInvoiceByNo('${noFaktur}')" title="Hapus Faktur Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>
-               </div>`
-            : `<button onclick="deleteLegacyTxByIndex(${idx})" title="Hapus Transaksi Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>`;
 
           tbody.innerHTML += `
             <tr>
@@ -1681,8 +1668,13 @@
               <td>${tx.Menu}</td>
               <td>${tx.Qty}</td>
               <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
-              <td>Rp ${tx.Total.toLocaleString('id-ID')}</td>
-              <td>${actionButtons}</td>
+              <td>Rp ${(tx.Total || 0).toLocaleString('id-ID')}</td>
+              <td>
+                <div class="action-btn-group">
+                  <button onclick="reprintTransactionRow(${idx})" title="Cetak Ulang Struk" style="background:#0f172a; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>
+                  <button onclick="deleteTransactionRow(${idx})" title="Hapus Transaksi Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>
+                </div>
+              </td>
             </tr>
           `;
         });
