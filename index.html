@@ -85,7 +85,7 @@
 
     .qris-img-preview { width: 240px; height: 240px; border: 2px solid #0f172a; border-radius: 10px; object-fit: contain; margin: 10px auto; display: block; background: #fff; padding: 8px; }
     .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 12px; vertical-align: top; }
+    .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 12px; vertical-align: middle; }
     .custom-table th { background: #f1f5f9; }
 
     .invoice-badge {
@@ -120,17 +120,17 @@
 
     .owner-report-toolbar {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
       margin-top: 10px;
     }
     .btn-owner-tool {
       border: none;
-      padding: 10px 8px;
+      padding: 10px 6px;
       border-radius: 7px;
       color: #fff;
       font-weight: 700;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       text-align: center;
     }
@@ -177,6 +177,16 @@
     .neraca-row.sub { padding-left: 12px; color: #475569; font-size: 11px; }
     .neraca-row.total-row { border-top: 2px solid #94a3b8; border-bottom: 2px solid #0f172a; font-weight: 700; font-size: 13px; margin-top: 6px; padding: 6px 0; background: #f8fafc; }
 
+    /* Styling Stock Opname Cepat */
+    .opname-filter-bar { display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px; margin-bottom: 8px; }
+    .opname-bulk-bar { display: flex; gap: 6px; align-items: center; background: #fffbeb; border: 1px solid #fde68a; padding: 8px; border-radius: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .opname-input { width: 75px; padding: 5px; text-align: center; border: 1px solid #94a3b8; border-radius: 4px; font-weight: 700; font-size: 13px; }
+    .opname-input.has-value { border-color: #2563eb; background: #eff6ff; }
+    .diff-badge { font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .diff-minus { background: #fee2e2; color: #dc2626; }
+    .diff-plus { background: #dcfce7; color: #16a34a; }
+    .diff-zero { background: #f1f5f9; color: #475569; }
+
     @media (max-width: 1024px) {
       .menu-panel { padding: 12px; }
       .cart-panel { min-width: 270px; max-width: 310px; padding: 12px; }
@@ -191,7 +201,7 @@
       .container { flex-direction: column; height: 100vh; }
       .menu-panel { flex: 1; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
       .cart-panel { flex: none; height: 305px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
-      .admin-form-grid-4, .admin-form-grid-5, .neraca-grid { grid-template-columns: 1fr; }
+      .admin-form-grid-4, .admin-form-grid-5, .neraca-grid, .opname-filter-bar { grid-template-columns: 1fr; }
       .owner-report-toolbar { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -439,7 +449,7 @@
 
   <!-- Modal Admin Dashboard (KHUSUS OWNER) -->
   <div id="adminModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 860px; height: 92vh;">
+    <div class="modal-content" style="max-width: 880px; height: 92vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px; margin-bottom:10px;">
         <h3>🔑 Dashboard Owner — Laporan Keuangan & Kontrol Toko</h3>
         <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
@@ -461,8 +471,9 @@
         </div>
       </div>
 
-      <!-- Tombol Menu Laporan Khusus Owner -->
+      <!-- Tombol Menu Laporan & Stock Opname Khusus Owner -->
       <div class="owner-report-toolbar">
+        <button onclick="openStockOpnameModal()" class="btn-owner-tool" style="background:#d97706;">📋 Stock Opname Cepat</button>
         <button onclick="openNeracaModal()" class="btn-owner-tool" style="background:#0f766e;">📊 Neraca & Laba Rugi</button>
         <button onclick="openHistoryModal('owner')" class="btn-owner-tool" style="background:#0284c7;">📜 Tutup Buku Bulanan</button>
         <button onclick="openForecastModal()" class="btn-owner-tool" style="background:#7c3aed;">📈 Forecast Penjualan</button>
@@ -547,8 +558,75 @@
       </div>
 
       <div style="margin-top:10px; border-top:2px solid #f1f5f9; padding-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-        <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📋 Audit Log Restok</button>
+        <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📋 Audit Log Restok & Opname</button>
         <span style="font-size:11px; color:#64748b;">Semua laporan keuangan terlindungi PIN Owner.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Stock Opname Cepat (KHUSUS OWNER) -->
+  <div id="stockOpnameModal" class="modal-overlay" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 820px; height: 90vh;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <div>
+          <h3 style="color:#0f172a;">📋 Stock Opname Cepat (1x Klik Simpan Semua)</h3>
+          <small style="color:#64748b;">Isi kolom <strong>Stok Fisik</strong> hanya pada menu yang dihitung. Kolom kosong tidak mengubah stok sistem.</small>
+        </div>
+        <button onclick="closeStockOpnameModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Filter Kategori & Pencarian -->
+      <div class="opname-filter-bar">
+        <select id="opnameCategoryFilter" class="input-field" style="margin:0;" onchange="renderStockOpnameTable()">
+          <option value="semua">📂 Semua Kategori (117 Menu)</option>
+          <option value="makanan">Makanan</option>
+          <option value="minuman">Minuman</option>
+          <option value="rice bowl">Rice Bowl</option>
+          <option value="roti bakar">Roti Bakar</option>
+          <option value="pisang bakar">Pisang Bakar</option>
+          <option value="cemilan">Cemilan</option>
+          <option value="kopi">Kopi</option>
+          <option value="malaka">Malaka</option>
+          <option value="coklat">Coklat</option>
+          <option value="soda">Soda</option>
+          <option value="nutrisari">Nutrisari</option>
+          <option value="susu">Susu</option>
+        </select>
+        <input type="text" id="opnameSearchInput" class="input-field" style="margin:0;" placeholder="🔍 Cari nama menu untuk opname..." oninput="renderStockOpnameTable()">
+      </div>
+
+      <!-- Alat Isi Massal untuk Menu Tampil -->
+      <div class="opname-bulk-bar">
+        <span style="font-size:12px; font-weight:700; color:#92400e;">⚡ Isi Massal Menu Tampil:</span>
+        <input type="number" id="opnameBulkQtyInput" inputmode="numeric" min="0" placeholder="Qty" style="width:75px; padding:5px; border:1px solid #d97706; border-radius:4px; font-size:12px;">
+        <button type="button" onclick="applyBulkOpnameValue()" style="background:#d97706; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer;">Terapkan ke Daftar Ini</button>
+        <button type="button" onclick="clearOpnameDrafts()" style="background:#64748b; color:#fff; border:none; padding:5px 10px; border-radius:4px; font-size:11px; font-weight:600; cursor:pointer;">Reset Input</button>
+      </div>
+
+      <!-- Tabel Opname -->
+      <div style="flex:1; overflow-y:auto;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Nama Menu & Kategori</th>
+              <th style="text-align:center;">Stok Sistem</th>
+              <th style="text-align:center;">Stok Fisik (Hitungan)</th>
+              <th style="text-align:center;">Selisih</th>
+            </tr>
+          </thead>
+          <tbody id="stockOpnameTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Footer Simpan Semua -->
+      <div style="margin-top:12px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:12px; color:#334155;">
+          Siap diperbarui: <strong id="opnameChangedCount" style="color:#2563eb;">0 menu</strong>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" onclick="closeStockOpnameModal()" style="background:#64748b; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Batal</button>
+          <button type="button" onclick="saveAllStockOpname()" style="background:#16a34a; color:#fff; border:none; padding:9px 16px; border-radius:6px; cursor:pointer; font-weight:700; font-size:13px;">💾 Simpan Semua Hasil Opname</button>
+        </div>
       </div>
     </div>
   </div>
@@ -695,11 +773,11 @@
     </div>
   </div>
 
-  <!-- Modal Log Audit Restok (KHUSUS OWNER) -->
+  <!-- Modal Log Audit Restok & Opname (KHUSUS OWNER) -->
   <div id="restockLogModal" class="modal-overlay" style="z-index: 1100;">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3>📋 Log Audit Riwayat Barang Masuk</h3>
+        <h3>📋 Log Audit Riwayat Barang Masuk & Stock Opname</h3>
         <button onclick="closeRestockLogModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
       <div style="overflow-y:auto; flex:1;">
@@ -708,7 +786,7 @@
             <tr>
               <th>Tanggal</th>
               <th>Nama Menu</th>
-              <th>Tambahan Stok</th>
+              <th>Selisih / Tambahan</th>
               <th>Keterangan</th>
             </tr>
           </thead>
@@ -884,6 +962,7 @@
     const adminPin = '4M112208';
     let isOwnerLoggedIn = false;
     let currentHistoryViewMode = 'kasir';
+    let opnameDrafts = {}; // Menyimpan input sementara Stock Opname per ID menu
 
     function toArraySafe(val) {
       if (!val) return [];
@@ -1057,6 +1136,9 @@
         if (document.getElementById('neracaModal').style.display === 'flex') {
           renderNeracaReport();
         }
+        if (document.getElementById('stockOpnameModal').style.display === 'flex') {
+          renderStockOpnameTable();
+        }
       });
 
       db.ref('warkop_data/voidPin').on('value', (snapshot) => {
@@ -1206,6 +1288,7 @@
       document.getElementById('historyModal').style.display = 'none';
       document.getElementById('forecastModal').style.display = 'none';
       document.getElementById('restockLogModal').style.display = 'none';
+      document.getElementById('stockOpnameModal').style.display = 'none';
     }
 
     function renderMenu(items) {
@@ -1710,7 +1793,177 @@
     }
 
     /* =================================================================
-       4. NERACA & LAPORAN LABA RUGI (KHUSUS OWNER)
+       4. STOCK OPNAME CEPAT (KHUSUS OWNER)
+       ================================================================= */
+    function openStockOpnameModal() {
+      if (!ensureOwnerAccess()) return;
+      opnameDrafts = {};
+      document.getElementById('opnameCategoryFilter').value = 'semua';
+      document.getElementById('opnameSearchInput').value = '';
+      document.getElementById('opnameBulkQtyInput').value = '';
+      renderStockOpnameTable();
+      document.getElementById('stockOpnameModal').style.display = 'flex';
+    }
+
+    function closeStockOpnameModal() {
+      document.getElementById('stockOpnameModal').style.display = 'none';
+    }
+
+    function getFilteredOpnameProducts() {
+      const cat = document.getElementById('opnameCategoryFilter').value;
+      const query = document.getElementById('opnameSearchInput').value.toLowerCase().trim();
+      return products.filter(p => {
+        const matchCat = (cat === 'semua') || (p.category.toLowerCase() === cat.toLowerCase());
+        const matchSearch = !query || p.name.toLowerCase().includes(query);
+        return matchCat && matchSearch;
+      });
+    }
+
+    function renderStockOpnameTable() {
+      const tbody = document.getElementById('stockOpnameTableBody');
+      const list = getFilteredOpnameProducts();
+      tbody.innerHTML = '';
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tidak ada menu pada kategori/pencarian ini</td></tr>';
+        updateOpnameChangedCounter();
+        return;
+      }
+
+      list.forEach(p => {
+        const draftVal = opnameDrafts.hasOwnProperty(p.id) ? opnameDrafts[p.id] : '';
+        const hasVal = draftVal !== '';
+        let diffHtml = '<span style="color:#94a3b8; font-size:11px;">-</span>';
+
+        if (hasVal) {
+          const diff = parseInt(draftVal, 10) - p.stock;
+          if (diff < 0) {
+            diffHtml = `<span class="diff-badge diff-minus">${diff}</span>`;
+          } else if (diff > 0) {
+            diffHtml = `<span class="diff-badge diff-plus">+${diff}</span>`;
+          } else {
+            diffHtml = `<span class="diff-badge diff-zero">0 (Cocok)</span>`;
+          }
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong><br><small style="color:#64748b; text-transform:capitalize;">${p.category}</small></td>
+            <td style="text-align:center; font-weight:700;">${p.stock}</td>
+            <td style="text-align:center;">
+              <input type="number" inputmode="numeric" min="0"
+                class="opname-input ${hasVal ? 'has-value' : ''}"
+                value="${draftVal}"
+                placeholder="${p.stock}"
+                oninput="handleOpnameInput(${p.id}, ${p.stock}, this)">
+            </td>
+            <td id="opnameDiff_${p.id}" style="text-align:center;">${diffHtml}</td>
+          </tr>
+        `;
+      });
+
+      updateOpnameChangedCounter();
+    }
+
+    function handleOpnameInput(id, systemStock, inputEl) {
+      const raw = inputEl.value.trim();
+      const diffCell = document.getElementById(`opnameDiff_${id}`);
+
+      if (raw === '') {
+        delete opnameDrafts[id];
+        inputEl.classList.remove('has-value');
+        if (diffCell) diffCell.innerHTML = '<span style="color:#94a3b8; font-size:11px;">-</span>';
+      } else {
+        const num = Math.max(0, parseInt(raw, 10) || 0);
+        opnameDrafts[id] = num;
+        inputEl.classList.add('has-value');
+        const diff = num - systemStock;
+        if (diffCell) {
+          if (diff < 0) {
+            diffCell.innerHTML = `<span class="diff-badge diff-minus">${diff}</span>`;
+          } else if (diff > 0) {
+            diffCell.innerHTML = `<span class="diff-badge diff-plus">+${diff}</span>`;
+          } else {
+            diffCell.innerHTML = `<span class="diff-badge diff-zero">0 (Cocok)</span>`;
+          }
+        }
+      }
+      updateOpnameChangedCounter();
+    }
+
+    function applyBulkOpnameValue() {
+      const bulkRaw = document.getElementById('opnameBulkQtyInput').value.trim();
+      if (bulkRaw === '' || isNaN(parseInt(bulkRaw, 10)) || parseInt(bulkRaw, 10) < 0) {
+        alert('Masukkan angka stok fisik yang valid terlebih dahulu!');
+        return;
+      }
+      const bulkQty = parseInt(bulkRaw, 10);
+      const visibleList = getFilteredOpnameProducts();
+      if (visibleList.length === 0) return;
+
+      visibleList.forEach(p => {
+        opnameDrafts[p.id] = bulkQty;
+      });
+      renderStockOpnameTable();
+    }
+
+    function clearOpnameDrafts() {
+      opnameDrafts = {};
+      document.getElementById('opnameBulkQtyInput').value = '';
+      renderStockOpnameTable();
+    }
+
+    function updateOpnameChangedCounter() {
+      const count = Object.keys(opnameDrafts).length;
+      const el = document.getElementById('opnameChangedCount');
+      if (el) el.innerText = `${count} menu`;
+    }
+
+    function saveAllStockOpname() {
+      if (!ensureOwnerAccess()) return;
+      const entries = Object.entries(opnameDrafts);
+      if (entries.length === 0) {
+        alert('Belum ada angka Stok Fisik yang diisi!');
+        return;
+      }
+
+      if (!confirm(`Simpan hasil Stock Opname untuk ${entries.length} menu ke Cloud sekarang?`)) {
+        return;
+      }
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      let updatedCount = 0;
+
+      entries.forEach(([idStr, physicalQty]) => {
+        const id = parseInt(idStr, 10);
+        const product = products.find(p => p.id === id);
+        if (product) {
+          const oldStock = product.stock;
+          const diff = physicalQty - oldStock;
+          product.stock = physicalQty;
+          updatedCount++;
+
+          restockLogs.unshift({
+            Waktu: dateStr,
+            Menu: product.name,
+            QtyTambahan: diff,
+            Keterangan: `Stock Opname (${oldStock} -> ${physicalQty})`
+          });
+        }
+      });
+
+      saveProducts();
+      saveRestockLogsToCloud();
+      renderAdminStockTable();
+      populateRestockSelect();
+      opnameDrafts = {};
+      closeStockOpnameModal();
+      alert(`✅ Stock Opname berhasil! ${updatedCount} menu telah diperbarui di Cloud dan dicatat di Audit Log.`);
+    }
+
+    /* =================================================================
+       5. NERACA & LAPORAN LABA RUGI (KHUSUS OWNER)
        ================================================================= */
     function computeNeracaAndProfitLoss() {
       let totalRevenue = 0;
@@ -2332,14 +2585,17 @@
       tbody.innerHTML = '';
 
       if (restockLogs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat penambahan stok</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Belum ada riwayat penambahan stok / opname</td></tr>';
       } else {
         restockLogs.forEach(log => {
+          const qtyVal = Number(log.QtyTambahan) || 0;
+          const qtyText = qtyVal > 0 ? `+${qtyVal}` : `${qtyVal}`;
+          const qtyColor = qtyVal >= 0 ? '#15803d' : '#dc2626';
           tbody.innerHTML += `
             <tr>
               <td>${log.Waktu}</td>
               <td><strong>${log.Menu}</strong></td>
-              <td style="color:#15803d; font-weight:bold;">+${log.QtyTambahan}</td>
+              <td style="color:${qtyColor}; font-weight:bold;">${qtyText}</td>
               <td>${log.Keterangan}</td>
             </tr>
           `;
@@ -2437,8 +2693,8 @@
       excelData.push(["TOTAL AKTIVA", neracaData.totalAssets, "TOTAL PASIVA", neracaData.totalLiabilitiesEquity]);
       excelData.push([""]);
 
-      excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
-      excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
+      excelData.push(["--- LOG BARANG MASUK & STOCK OPNAME ---"]);
+      excelData.push(["Tanggal", "Nama Menu", "Selisih / Tambahan", "Keterangan"]);
 
       restockLogs.forEach(log => {
         excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
