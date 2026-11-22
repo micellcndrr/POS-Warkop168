@@ -89,6 +89,18 @@
     .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 12px; }
     .custom-table th { background: #f1f5f9; }
 
+    .invoice-badge {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
     .input-field { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-bottom: 8px; }
 
     .admin-section-box { margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
@@ -239,9 +251,14 @@
   <!-- Modal Pembayaran -->
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 520px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h3>Pembayaran - <span id="modalPayTotal" style="color:#16a34a;">Rp 0</span></h3>
         <button onclick="closePaymentModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="background:#f1f5f9; padding:6px 10px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; font-size:12px;">
+        <span style="color:#475569; font-weight:600;">No. Faktur Transaksi:</span>
+        <span id="modalPreviewInvoiceNo" class="invoice-badge">INV-00000000-0001</span>
       </div>
 
       <div class="payment-tabs">
@@ -380,21 +397,27 @@
 
   <!-- Modal Tutup Buku Bulanan -->
   <div id="historyModal" class="modal-overlay">
-    <div class="modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="modal-content" style="max-width: 820px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h3>Laporan Penjualan & Tutup Buku Bulanan</h3>
         <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
       </div>
 
-      <div style="overflow-y:auto; flex:1; margin-top:10px;">
+      <div style="margin-bottom:8px;">
+        <input type="text" id="historySearchInput" class="input-field" placeholder="🔍 Cari No. Faktur (contoh: INV-2026...) atau nama menu..." oninput="renderHistoryTable()" style="margin:0;">
+      </div>
+
+      <div style="overflow-y:auto; flex:1;">
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Tanggal Transaksi</th>
+              <th>No. Faktur</th>
+              <th>Tanggal & Jam</th>
               <th>Menu</th>
               <th>Qty</th>
               <th>Metode</th>
-              <th>Total Penjualan</th>
+              <th>Total</th>
+              <th>Struk</th>
             </tr>
           </thead>
           <tbody id="historyTableBody"></tbody>
@@ -706,6 +729,29 @@
       return Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean);
     }
 
+    // Generator Nomor Faktur Otomatis: INV-YYYYMMDD-0001
+    function generateNextInvoiceNumber() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const dateCode = `${yyyy}${mm}${dd}`;
+      const prefix = `INV-${dateCode}-`;
+
+      let maxSeq = 0;
+      monthlyTransactions.forEach(tx => {
+        if (tx.NoFaktur && tx.NoFaktur.startsWith(prefix)) {
+          const seqPart = parseInt(tx.NoFaktur.replace(prefix, ''), 10);
+          if (!isNaN(seqPart) && seqPart > maxSeq) {
+            maxSeq = seqPart;
+          }
+        }
+      });
+
+      const nextSeq = String(maxSeq + 1).padStart(4, '0');
+      return `${prefix}${nextSeq}`;
+    }
+
     // PIN Void 4 Angka Acak (untuk kurangi / hapus keranjang)
     function generateRandom4DigitPin() {
       return Math.floor(1000 + Math.random() * 9000).toString();
@@ -715,7 +761,7 @@
     localStorage.setItem('warkop_void_pin', currentVoidPin);
 
     // Timer Notifikasi Tanpa Pesanan (30 Menit)
-    const IDLE_LIMIT_MS = 30 * 60 * 1000; // 30 Menit
+    const IDLE_LIMIT_MS = 30 * 60 * 1000;
     let lastOrderTime = parseInt(localStorage.getItem('warkop_last_order_time')) || Date.now();
     let idlePopupShownForCurrentCycle = false;
 
@@ -847,11 +893,13 @@
           monthlyTransactions = cloudTx;
           localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
         } else if (monthlyTransactions.length > 0) {
-          // Otomatis unggah transaksi lokal (misal dari laptop toko semalam) ke Cloud jika Cloud masih kosong
           db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
         } else {
           monthlyTransactions = [];
           localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+        }
+        if (document.getElementById('historyModal').style.display === 'flex') {
+          renderHistoryTable();
         }
       });
 
@@ -1065,7 +1113,9 @@
       }
 
       const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const previewInvoice = generateNextInvoiceNumber();
       document.getElementById('modalPayTotal').innerText = 'Rp ' + total.toLocaleString('id-ID');
+      document.getElementById('modalPreviewInvoiceNo').innerText = previewInvoice;
       
       const qrisImg = document.getElementById('qrisDisplayImg');
       if (savedQrisUrl) {
@@ -1120,18 +1170,16 @@
       }
     }
 
-    function printThermalReceipt(method, cashAmount = 0, changeAmount = 0) {
+    function buildAndPrintReceipt(itemsList, method, invoiceNo, dateObj, cashAmount = 0, changeAmount = 0) {
       const printArea = document.getElementById('receiptPrintArea');
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const receiptNo = 'P168-' + Math.floor(100000 + Math.random() * 900000);
+      const dateStr = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
       
-      const totalItemCount = cart.reduce((sum, item) => sum + item.qty, 0);
-      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const totalItemCount = itemsList.reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = itemsList.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
       let itemsHtml = '';
-      cart.forEach(item => {
+      itemsList.forEach(item => {
         const itemSubtotal = item.price * item.qty;
         itemsHtml += `
           <div class="receipt-item-title">${item.name}</div>
@@ -1153,19 +1201,19 @@
         <div class="receipt-divider"></div>
         
         <div class="receipt-row">
-          <span>No. Nota:</span>
-          <span>${receiptNo}</span>
+          <span>No. Faktur:</span>
+          <span style="font-weight:bold;">${invoiceNo}</span>
         </div>
         <div class="receipt-row">
-          <span>Tanggal :</span>
+          <span>Tanggal   :</span>
           <span>${dateStr}</span>
         </div>
         <div class="receipt-row">
-          <span>Waktu   :</span>
+          <span>Waktu     :</span>
           <span>${timeStr}</span>
         </div>
         <div class="receipt-row">
-          <span>Kasir   :</span>
+          <span>Kasir     :</span>
           <span>Kasir Warkop</span>
         </div>
 
@@ -1196,7 +1244,7 @@
           <span>Metode Bayar</span>
           <span>${method}</span>
         </div>
-        ${method === 'Tunai' ? `
+        ${method === 'Tunai' && cashAmount > 0 ? `
         <div class="receipt-row">
           <span>Uang Tunai</span>
           <span>Rp ${cashAmount.toLocaleString('id-ID')}</span>
@@ -1218,6 +1266,63 @@
       window.print();
     }
 
+    function reprintInvoiceByNo(invoiceNo) {
+      const matched = monthlyTransactions.filter(tx => (tx.NoFaktur || '-') === invoiceNo);
+      if (matched.length === 0) {
+        alert('Data faktur tidak ditemukan.');
+        return;
+      }
+
+      const itemsList = matched.map(tx => ({
+        name: tx.Menu,
+        price: tx.Harga,
+        qty: tx.Qty
+      }));
+      const method = matched[0].Metode || 'Tunai';
+
+      const printArea = document.getElementById('receiptPrintArea');
+      const totalItemCount = itemsList.reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = itemsList.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+      let itemsHtml = '';
+      itemsList.forEach(item => {
+        const itemSubtotal = item.price * item.qty;
+        itemsHtml += `
+          <div class="receipt-item-title">${item.name}</div>
+          <div class="receipt-row">
+            <span>${item.qty} x ${item.price.toLocaleString('id-ID')}</span>
+            <span>Rp ${itemSubtotal.toLocaleString('id-ID')}</span>
+          </div>
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="receipt-header">
+          <h2 style="font-size:13px; font-weight:bold; margin-bottom:2px;">WARKOP PANCONG 168</h2>
+          <p style="font-size:9px;">Kopi, Pancong Lumer & Hangout</p>
+          <p style="font-size:9px;">Jl. Raya Depok No. 168</p>
+          <p style="font-size:9px;">Telp/WA: 081510222645</p>
+          <p style="font-size:9px; font-weight:bold; margin-top:2px;">[CETAK ULANG FAKTUR]</p>
+        </div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>No. Faktur:</span><span style="font-weight:bold;">${invoiceNo}</span></div>
+        <div class="receipt-row"><span>Tanggal   :</span><span>${matched[0].Tanggal}</span></div>
+        <div class="receipt-row"><span>Waktu     :</span><span>${matched[0].Waktu || '-'}</span></div>
+        <div class="receipt-divider"></div>
+        ${itemsHtml}
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>Total Qty</span><span>${totalItemCount} Item</span></div>
+        <div class="receipt-row" style="font-weight:bold; font-size:11px;"><span>TOTAL</span><span>Rp ${subtotal.toLocaleString('id-ID')}</span></div>
+        <div class="receipt-row"><span>Metode Bayar</span><span>${method}</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-footer">
+          <p style="margin-top:4px;">Terima kasih atas kunjungan Anda!</p>
+        </div>
+      `;
+
+      window.print();
+    }
+
     function confirmCashPayment() {
       const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       const cash = parseFloat(document.getElementById('cashAmountInput').value) || 0;
@@ -1228,21 +1333,25 @@
       }
 
       const change = cash - total;
+      const invoiceNo = generateNextInvoiceNumber();
+      const now = new Date();
       
-      if (confirm('Pembayaran Tunai Berhasil!\nKembalian: Rp ' + change.toLocaleString('id-ID') + '\n\nApakah mau cetak nota?')) {
-        printThermalReceipt('Tunai', cash, change);
+      if (confirm(`Pembayaran Tunai Berhasil!\nNo. Faktur: ${invoiceNo}\nKembalian: Rp ${change.toLocaleString('id-ID')}\n\nApakah mau cetak nota?`)) {
+        buildAndPrintReceipt(cart, 'Tunai', invoiceNo, now, cash, change);
       }
 
-      executeTransaction('Tunai');
+      executeTransaction('Tunai', invoiceNo, now);
       closePaymentModal();
       clearCartSilent();
     }
 
     function confirmNonCashPayment(methodName) {
-      if (confirm(`Pembayaran via ${methodName} Berhasil!\n\nApakah mau cetak nota?`)) {
-        printThermalReceipt(methodName);
+      const invoiceNo = generateNextInvoiceNumber();
+      const now = new Date();
+      if (confirm(`Pembayaran via ${methodName} Berhasil!\nNo. Faktur: ${invoiceNo}\n\nApakah mau cetak nota?`)) {
+        buildAndPrintReceipt(cart, methodName, invoiceNo, now);
       }
-      executeTransaction(methodName);
+      executeTransaction(methodName, invoiceNo, now);
       closePaymentModal();
       clearCartSilent();
     }
@@ -1250,10 +1359,12 @@
     function confirmTransferPayment() {
       const bank = document.getElementById('transferBankSelect').value;
       const methodLabel = `Transfer (${bank})`;
-      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\n\nApakah mau cetak nota?`)) {
-        printThermalReceipt(methodLabel);
+      const invoiceNo = generateNextInvoiceNumber();
+      const now = new Date();
+      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\nNo. Faktur: ${invoiceNo}\n\nApakah mau cetak nota?`)) {
+        buildAndPrintReceipt(cart, methodLabel, invoiceNo, now);
       }
-      executeTransaction(methodLabel);
+      executeTransaction(methodLabel, invoiceNo, now);
       closePaymentModal();
       clearCartSilent();
     }
@@ -1261,17 +1372,19 @@
     function confirmDebitPayment() {
       const ref = document.getElementById('debitRefInput').value.trim();
       const methodLabel = ref ? `Debit (Reff: ${ref})` : 'Debit EDC';
-      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\n\nApakah mau cetak nota?`)) {
-        printThermalReceipt(methodLabel);
+      const invoiceNo = generateNextInvoiceNumber();
+      const now = new Date();
+      if (confirm(`Pembayaran ${methodLabel} Berhasil Dikonfirmasi!\nNo. Faktur: ${invoiceNo}\n\nApakah mau cetak nota?`)) {
+        buildAndPrintReceipt(cart, methodLabel, invoiceNo, now);
       }
-      executeTransaction(methodLabel);
+      executeTransaction(methodLabel, invoiceNo, now);
       closePaymentModal();
       clearCartSilent();
     }
 
-    function executeTransaction(method) {
-      const now = new Date();
+    function executeTransaction(method, invoiceNo, now = new Date()) {
       const formattedDate = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const formattedTime = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
       
       cart.forEach(item => {
         const prod = products.find(p => p.id === item.id);
@@ -1280,7 +1393,9 @@
         }
 
         monthlyTransactions.push({
+          NoFaktur: invoiceNo,
           Tanggal: formattedDate,
+          Waktu: formattedTime,
           Menu: item.name,
           Kategori: item.category,
           Harga: item.price,
@@ -1447,24 +1562,49 @@
     }
 
     function openHistoryModal() {
+      const searchEl = document.getElementById('historySearchInput');
+      if (searchEl) searchEl.value = '';
+      renderHistoryTable();
+      document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    function renderHistoryTable() {
       const tbody = document.getElementById('historyTableBody');
+      const query = (document.getElementById('historySearchInput')?.value || '').toLowerCase().trim();
       tbody.innerHTML = '';
 
       let totalOmset = 0;
       let totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
 
-      if (monthlyTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Belum ada data transaksi bulan ini</td></tr>';
+      monthlyTransactions.forEach(tx => {
+        totalOmset += tx.Total;
+      });
+
+      const filteredTx = monthlyTransactions.filter(tx => {
+        if (!query) return true;
+        const faktur = (tx.NoFaktur || '').toLowerCase();
+        const menu = (tx.Menu || '').toLowerCase();
+        return faktur.includes(query) || menu.includes(query);
+      });
+
+      if (filteredTx.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data transaksi yang sesuai</td></tr>';
       } else {
-        monthlyTransactions.forEach(tx => {
-          totalOmset += tx.Total;
+        // Tampilkan transaksi terbaru di bagian paling atas
+        [...filteredTx].reverse().forEach(tx => {
+          const noFaktur = tx.NoFaktur || '-';
+          const waktuText = tx.Waktu ? `${tx.Tanggal} (${tx.Waktu})` : tx.Tanggal;
           tbody.innerHTML += `
             <tr>
-              <td>${tx.Tanggal}</td>
+              <td><span class="invoice-badge">${noFaktur}</span></td>
+              <td>${waktuText}</td>
               <td>${tx.Menu}</td>
               <td>${tx.Qty}</td>
               <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
               <td>Rp ${tx.Total.toLocaleString('id-ID')}</td>
+              <td>
+                ${noFaktur !== '-' ? `<button onclick="reprintInvoiceByNo('${noFaktur}')" title="Cetak Ulang Struk Faktur Ini" style="background:#0f172a; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>` : '-'}
+              </td>
             </tr>
           `;
         });
@@ -1474,8 +1614,6 @@
       document.getElementById('modalTotalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
       document.getElementById('modalSummaryExpense').innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
       document.getElementById('modalNetProfit').innerText = 'Rp ' + netProfit.toLocaleString('id-ID');
-
-      document.getElementById('historyModal').style.display = 'flex';
     }
 
     function closeHistoryModal() {
@@ -1695,7 +1833,7 @@
         ["LAPORAN REKAP BULANAN WARKOP PANCONG 168"],
         ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
-        ["--- RINGKASAN PENJUALAN BULANAN ---"],
+        ["--- RINGKASAN PENJUALAN PER MENU ---"],
         ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
       ];
 
@@ -1704,6 +1842,25 @@
         excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
       }
       excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
+      excelData.push([""]);
+
+      excelData.push(["--- RINCIAN TRANSAKSI PER NO. FAKTUR ---"]);
+      excelData.push(["No", "No. Faktur", "Tanggal", "Jam", "Nama Menu", "Qty", "Harga Satuan", "Total", "Metode Bayar"]);
+      
+      let noTx = 1;
+      monthlyTransactions.forEach(tx => {
+        excelData.push([
+          noTx++,
+          tx.NoFaktur || "-",
+          tx.Tanggal,
+          tx.Waktu || "-",
+          tx.Menu,
+          tx.Qty,
+          tx.Harga,
+          tx.Total,
+          tx.Metode || "Tunai"
+        ]);
+      });
       excelData.push([""]);
 
       excelData.push(["--- RINGKASAN PENGELUARAN BULANAN ---"]);
