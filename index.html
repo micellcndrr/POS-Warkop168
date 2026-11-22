@@ -664,19 +664,26 @@
     ];
 
     /* =================================================================
-       2. KONFIGURASI FIREBASE CLOUD
+       2. KONFIGURASI FIREBASE CLOUD (LENGKAP)
        ================================================================= */
     const firebaseConfig = {
+      apiKey: "AIzaSyBcnNJkqXx25d6j3Qgy4Iy-_MmM2HuV6Nk",
+      authDomain: "warkoppancong168-dea1a.firebaseapp.com",
       databaseURL: "https://warkoppancong168-dea1a-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "warkoppancong168-dea1a",
-      appId: "1:588936987499:web:4520dadcb7d940d654422e"
+      storageBucket: "warkoppancong168-dea1a.firebasestorage.app",
+      messagingSenderId: "588936987499",
+      appId: "1:588936987499:web:4520dadcb7d940d654422e",
+      measurementId: "G-L0BEM1LGVZ"
     };
 
     let db = null;
     let isCloudReady = false;
 
     try {
-      firebase.initializeApp(firebaseConfig);
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
       db = firebase.database();
       isCloudReady = true;
     } catch (err) {
@@ -693,6 +700,11 @@
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || 'qris.warkop.JPG';
 
     const adminPin = '4M112208';
+
+    function toArraySafe(val) {
+      if (!val) return [];
+      return Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean);
+    }
 
     // PIN Void 4 Angka Acak (untuk kurangi / hapus keranjang)
     function generateRandom4DigitPin() {
@@ -728,7 +740,6 @@
       const entered = prompt('🔒 Terkunci! Masukkan PIN Owner 4 Angka untuk mengubah/menghapus pesanan:');
       if (entered === null) return false;
       if (entered.trim() === currentVoidPin) {
-        // Otomatis acak PIN baru setelah dipakai agar tidak bisa dipakai ulang kasir
         regenerateVoidPin(false);
         return true;
       } else {
@@ -793,8 +804,8 @@
       });
 
       db.ref('warkop_data/products').on('value', (snapshot) => {
-        const cloudProducts = snapshot.val();
-        if (cloudProducts && Array.isArray(cloudProducts) && cloudProducts.length > 0) {
+        const cloudProducts = toArraySafe(snapshot.val());
+        if (cloudProducts.length > 0) {
           products = cloudProducts;
           localStorage.setItem('warkop_products', JSON.stringify(products));
         } else {
@@ -831,24 +842,46 @@
       });
 
       db.ref('warkop_data/monthlyTransactions').on('value', (snapshot) => {
-        const val = snapshot.val();
-        monthlyTransactions = Array.isArray(val) ? val : [];
-        localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+        const cloudTx = toArraySafe(snapshot.val());
+        if (cloudTx.length > 0) {
+          monthlyTransactions = cloudTx;
+          localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+        } else if (monthlyTransactions.length > 0) {
+          // Otomatis unggah transaksi lokal (misal dari laptop toko semalam) ke Cloud jika Cloud masih kosong
+          db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
+        } else {
+          monthlyTransactions = [];
+          localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+        }
       });
 
       db.ref('warkop_data/monthlyExpenses').on('value', (snapshot) => {
-        const val = snapshot.val();
-        monthlyExpenses = Array.isArray(val) ? val : [];
-        localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
+        const cloudExp = toArraySafe(snapshot.val());
+        if (cloudExp.length > 0) {
+          monthlyExpenses = cloudExp;
+          localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
+        } else if (monthlyExpenses.length > 0) {
+          db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
+        } else {
+          monthlyExpenses = [];
+          localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
+        }
         if (document.getElementById('expenseModal').style.display === 'flex') {
           renderExpenseTable();
         }
       });
 
       db.ref('warkop_data/restockLogs').on('value', (snapshot) => {
-        const val = snapshot.val();
-        restockLogs = Array.isArray(val) ? val : [];
-        localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
+        const cloudLogs = toArraySafe(snapshot.val());
+        if (cloudLogs.length > 0) {
+          restockLogs = cloudLogs;
+          localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
+        } else if (restockLogs.length > 0) {
+          db.ref('warkop_data/restockLogs').set(restockLogs);
+        } else {
+          restockLogs = [];
+          localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
+        }
       });
 
       db.ref('warkop_data/qrisUrl').on('value', (snapshot) => {
@@ -983,7 +1016,6 @@
       const product = products.find(p => p.id === id);
 
       if (item && product) {
-        // Kunci pengurangan/hapus item di keranjang dengan PIN Owner 4 angka acak
         if (delta < 0) {
           if (!verifyVoidPin()) return;
         }
@@ -1263,7 +1295,6 @@
       resetIdleOrderTimer();
     }
 
-    // Kosongkan keranjang otomatis setelah pembayaran sukses
     function clearCartSilent() {
       cart = [];
       document.getElementById('cashAmountInput').value = '';
@@ -1271,7 +1302,6 @@
       updateCart();
     }
 
-    // Tombol manual Kosongkan Keranjang (Wajib PIN Owner 4 Angka)
     function requestClearCartWithPin() {
       if (cart.length === 0) {
         alert('Keranjang sudah kosong.');
