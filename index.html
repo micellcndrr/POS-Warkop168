@@ -444,7 +444,8 @@
           <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
         </div>
         
-        <div style="display:flex; justify-content:flex-end;">
+        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <button onclick="forceClearStuckTransactions()" style="background:#475569; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;">🧹 Hapus Paksa Data Nyangkut</button>
           <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
         </div>
       </div>
@@ -732,7 +733,8 @@
 
     function toArraySafe(val) {
       if (!val) return [];
-      return Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean);
+      const arr = Array.isArray(val) ? val : Object.values(val);
+      return arr.filter(item => item && typeof item === 'object' && item.Menu);
     }
 
     // Generator Nomor Faktur Otomatis: INV-YYYYMMDD-0001
@@ -844,9 +846,6 @@
     /* =================================================================
        3. REAL-TIME LISTENER CLOUD <-> SEMUA PERANGKAT
        ================================================================= */
-    let isInitialTxLoad = true;
-    let isInitialExpLoad = true;
-
     if (isCloudReady && db) {
       db.ref('.info/connected').on('value', (snap) => {
         const badge = document.getElementById('cloudStatusBadge');
@@ -860,7 +859,8 @@
       });
 
       db.ref('warkop_data/products').on('value', (snapshot) => {
-        const cloudProducts = toArraySafe(snapshot.val());
+        const raw = snapshot.val();
+        const cloudProducts = Array.isArray(raw) ? raw.filter(Boolean) : (raw ? Object.values(raw).filter(Boolean) : []);
         if (cloudProducts.length > 0) {
           products = cloudProducts;
           localStorage.setItem('warkop_products', JSON.stringify(products));
@@ -897,44 +897,29 @@
         }
       });
 
+      // Cloud adalah satu-satunya sumber kebenaran agar transaksi terhapus tidak muncul lagi
       db.ref('warkop_data/monthlyTransactions').on('value', (snapshot) => {
-        const rawVal = snapshot.val();
-        const cloudTx = toArraySafe(rawVal);
-        if (rawVal !== null) {
-          monthlyTransactions = cloudTx;
-          localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
-        } else if (isInitialTxLoad && monthlyTransactions.length > 0) {
-          db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
-        } else {
-          monthlyTransactions = [];
-          localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
-        }
-        isInitialTxLoad = false;
+        const cloudTx = toArraySafe(snapshot.val());
+        monthlyTransactions = cloudTx;
+        localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
         if (document.getElementById('historyModal').style.display === 'flex') {
           renderHistoryTable();
         }
       });
 
       db.ref('warkop_data/monthlyExpenses').on('value', (snapshot) => {
-        const rawVal = snapshot.val();
-        const cloudExp = toArraySafe(rawVal);
-        if (rawVal !== null) {
-          monthlyExpenses = cloudExp;
-          localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
-        } else if (isInitialExpLoad && monthlyExpenses.length > 0) {
-          db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
-        } else {
-          monthlyExpenses = [];
-          localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
-        }
-        isInitialExpLoad = false;
+        const raw = snapshot.val();
+        const cloudExp = Array.isArray(raw) ? raw.filter(Boolean) : (raw ? Object.values(raw).filter(Boolean) : []);
+        monthlyExpenses = cloudExp;
+        localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
         if (document.getElementById('expenseModal').style.display === 'flex') {
           renderExpenseTable();
         }
       });
 
       db.ref('warkop_data/restockLogs').on('value', (snapshot) => {
-        const cloudLogs = toArraySafe(snapshot.val());
+        const raw = snapshot.val();
+        const cloudLogs = Array.isArray(raw) ? raw.filter(Boolean) : (raw ? Object.values(raw).filter(Boolean) : []);
         if (cloudLogs.length > 0) {
           restockLogs = cloudLogs;
           localStorage.setItem('warkop_restock_logs', JSON.stringify(restockLogs));
@@ -968,14 +953,22 @@
     function saveTransactionsToCloud() {
       localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
       if (isCloudReady && db) {
-        db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions.length > 0 ? monthlyTransactions : null);
+        if (monthlyTransactions.length > 0) {
+          db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
+        } else {
+          db.ref('warkop_data/monthlyTransactions').remove();
+        }
       }
     }
 
     function saveExpensesToCloud() {
       localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
       if (isCloudReady && db) {
-        db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses.length > 0 ? monthlyExpenses : null);
+        if (monthlyExpenses.length > 0) {
+          db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
+        } else {
+          db.ref('warkop_data/monthlyExpenses').remove();
+        }
       }
     }
 
@@ -1342,13 +1335,14 @@
     function deleteTransactionRow(originalIndex) {
       const targetTx = monthlyTransactions[originalIndex];
       if (!targetTx) {
-        alert('Data transaksi sudah terhapus atau tidak ditemukan.');
+        monthlyTransactions.splice(originalIndex, 1);
+        saveTransactionsToCloud();
         renderHistoryTable();
         return;
       }
 
       const invoiceNo = String(targetTx.NoFaktur || '').trim();
-      const hasValidInvoice = invoiceNo !== '' && invoiceNo !== '-';
+      const hasValidInvoice = invoiceNo !== '' && invoiceNo !== '-' && invoiceNo !== 'undefined' && invoiceNo !== 'null';
 
       const enteredPin = prompt(`🔒 Masukkan PIN Owner untuk menghapus transaksi${hasValidInvoice ? ' Faktur ' + invoiceNo : ' "' + targetTx.Menu + '"'}:`);
       if (enteredPin === null) return;
@@ -1385,7 +1379,28 @@
 
       saveTransactionsToCloud();
       renderHistoryTable();
-      alert(`✅ Transaksi berhasil dihapus${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
+      alert(`✅ Transaksi berhasil dihapus permanen${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
+    }
+
+    function forceClearStuckTransactions() {
+      const enteredPin = prompt('🔒 Masukkan PIN Owner untuk menghapus paksa seluruh data transaksi nyangkut di Cloud & Lokal:');
+      if (enteredPin === null) return;
+      if (enteredPin.trim() !== adminPin) {
+        alert('❌ PIN Owner Salah!');
+        return;
+      }
+
+      if (!confirm('⚠️ Yakin ingin mengosongkan paksa seluruh daftar transaksi penjualan saat ini?')) {
+        return;
+      }
+
+      monthlyTransactions = [];
+      localStorage.removeItem('warkop_monthly_tx');
+      if (isCloudReady && db) {
+        db.ref('warkop_data/monthlyTransactions').remove();
+      }
+      renderHistoryTable();
+      alert('✅ Seluruh transaksi nyangkut berhasil dibersihkan dari Cloud dan perangkat.');
     }
 
     function confirmCashPayment() {
