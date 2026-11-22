@@ -70,6 +70,7 @@
     .row-summary.total { font-weight: 700; font-size: 16px; color: #16a34a; margin-bottom: 10px; display: flex; justify-content: space-between; }
     .btn-action { width: 100%; padding: 9px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
     .btn-pay-main { background: #16a34a; color: #fff; font-size: 14px; padding: 11px; }
+    .btn-history { background: #0284c7; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
@@ -189,7 +190,7 @@
       body { overflow: auto; }
       .container { flex-direction: column; height: 100vh; }
       .menu-panel { flex: 1; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
-      .cart-panel { flex: none; height: 270px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
+      .cart-panel { flex: none; height: 305px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
       .admin-form-grid-4, .admin-form-grid-5, .neraca-grid { grid-template-columns: 1fr; }
       .owner-report-toolbar { grid-template-columns: repeat(2, 1fr); }
     }
@@ -277,6 +278,7 @@
         </div>
 
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Pembayaran</button>
+        <button class="btn-action btn-history" onclick="openHistoryModal('kasir')">📜 Laporan Penjualan & Faktur</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran</button>
         <button class="btn-action btn-clear" onclick="requestClearCartWithPin()">🔒 Kosongkan Keranjang</button>
       </div>
@@ -383,6 +385,58 @@
     </div>
   </div>
 
+  <!-- Modal Laporan Penjualan & Faktur (Mode Kasir vs Mode Owner) -->
+  <div id="historyModal" class="modal-overlay" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 880px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 id="historyModalTitle">📜 Laporan Penjualan & Faktur</h3>
+        <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <input type="text" id="historySearchInput" class="input-field" placeholder="🔍 Cari No. Faktur (contoh: INV-2026...) atau nama menu..." oninput="renderHistoryTable()" style="margin:0;">
+      </div>
+
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>No. Faktur</th>
+              <th>Tanggal & Jam</th>
+              <th>Rincian Item</th>
+              <th>Total Qty</th>
+              <th>Metode</th>
+              <th>Total Faktur</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Bagian Rekap Omset, Pengeluaran, Laba & Tutup Buku (HANYA MUNCUL DI MODE OWNER) -->
+      <div id="ownerHistoryFooter" style="display:none; margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Omset Bulanan:</span>
+          <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Pengeluaran Bulanan:</span>
+          <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+          <span>Laba Bersih Bulanan:</span>
+          <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <button onclick="forceClearStuckTransactions()" style="background:#475569; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;">🧹 Hapus Paksa Data Nyangkut</button>
+          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Admin Dashboard (KHUSUS OWNER) -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 860px; height: 92vh;">
@@ -410,7 +464,7 @@
       <!-- Tombol Menu Laporan Khusus Owner -->
       <div class="owner-report-toolbar">
         <button onclick="openNeracaModal()" class="btn-owner-tool" style="background:#0f766e;">📊 Neraca & Laba Rugi</button>
-        <button onclick="openHistoryModal()" class="btn-owner-tool" style="background:#0284c7;">📜 Tutup Buku Bulanan</button>
+        <button onclick="openHistoryModal('owner')" class="btn-owner-tool" style="background:#0284c7;">📜 Tutup Buku Bulanan</button>
         <button onclick="openForecastModal()" class="btn-owner-tool" style="background:#7c3aed;">📈 Forecast Penjualan</button>
         <button onclick="exportMonthlyRecapExcel()" class="btn-owner-tool" style="background:#15803d;">📥 Download Excel</button>
       </div>
@@ -589,57 +643,6 @@
         <div style="display:flex; gap:8px;">
           <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📥 Download Excel</button>
           <button onclick="closeNeracaModal()" style="background:#64748b; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Kembali</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Tutup Buku Bulanan (KHUSUS OWNER) -->
-  <div id="historyModal" class="modal-overlay" style="z-index: 1100;">
-    <div class="modal-content" style="max-width: 880px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3>📜 Laporan Penjualan & Tutup Buku Bulanan (Khusus Owner)</h3>
-        <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <div style="margin-bottom:8px;">
-        <input type="text" id="historySearchInput" class="input-field" placeholder="🔍 Cari No. Faktur (contoh: INV-2026...) atau nama menu..." oninput="renderHistoryTable()" style="margin:0;">
-      </div>
-
-      <div style="overflow-y:auto; flex:1;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>No. Faktur</th>
-              <th>Tanggal & Jam</th>
-              <th>Rincian Item</th>
-              <th>Total Qty</th>
-              <th>Metode</th>
-              <th>Total Faktur</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody"></tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Omset Bulanan:</span>
-          <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Pengeluaran Bulanan:</span>
-          <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-          <span>Laba Bersih Bulanan:</span>
-          <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-          <button onclick="forceClearStuckTransactions()" style="background:#475569; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;">🧹 Hapus Paksa Data Nyangkut</button>
-          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
         </div>
       </div>
     </div>
@@ -880,6 +883,7 @@
 
     const adminPin = '4M112208';
     let isOwnerLoggedIn = false;
+    let currentHistoryViewMode = 'kasir';
 
     function toArraySafe(val) {
       if (!val) return [];
@@ -1196,6 +1200,7 @@
 
     function logoutAdmin() {
       isOwnerLoggedIn = false;
+      currentHistoryViewMode = 'kasir';
       document.getElementById('adminModal').style.display = 'none';
       document.getElementById('neracaModal').style.display = 'none';
       document.getElementById('historyModal').style.display = 'none';
@@ -1481,7 +1486,6 @@
     }
 
     function reprintTransactionRow(originalIndex) {
-      if (!ensureOwnerAccess()) return;
       const targetTx = monthlyTransactions[originalIndex];
       if (!targetTx) return;
 
@@ -2019,9 +2023,19 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
-    /* LAPORAN PENJUALAN & TUTUP BUKU BULANAN (KHUSUS OWNER) */
-    function openHistoryModal() {
-      if (!ensureOwnerAccess()) return;
+    /* LAPORAN PENJUALAN & FAKTUR (MODE KASIR & MODE OWNER) */
+    function openHistoryModal(mode = 'kasir') {
+      if (mode === 'owner') {
+        if (!ensureOwnerAccess()) return;
+        currentHistoryViewMode = 'owner';
+        document.getElementById('historyModalTitle').innerText = '📜 Laporan Penjualan & Tutup Buku Bulanan (Owner)';
+        document.getElementById('ownerHistoryFooter').style.display = 'block';
+      } else {
+        currentHistoryViewMode = 'kasir';
+        document.getElementById('historyModalTitle').innerText = '📜 Laporan Penjualan & Faktur';
+        document.getElementById('ownerHistoryFooter').style.display = 'none';
+      }
+
       const searchEl = document.getElementById('historySearchInput');
       if (searchEl) searchEl.value = '';
       renderHistoryTable();
@@ -2103,6 +2117,8 @@
         return matchFaktur || matchMenu;
       });
 
+      const isOwnerMode = (currentHistoryViewMode === 'owner' && isOwnerLoggedIn);
+
       if (filteredInvoices.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data transaksi yang sesuai</td></tr>';
       } else {
@@ -2111,6 +2127,10 @@
           const itemsHtml = inv.items
             .map(it => `<div class="invoice-item-line">• ${it.menu} <strong>(${it.qty}x)</strong></div>`)
             .join('');
+
+          const deleteBtnHtml = isOwnerMode
+            ? `<button onclick="deleteTransactionRow(${inv.firstIndex})" title="Hapus Faktur Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>`
+            : '';
 
           tbody.innerHTML += `
             <tr>
@@ -2123,7 +2143,7 @@
               <td>
                 <div class="action-btn-group">
                   <button onclick="reprintTransactionRow(${inv.firstIndex})" title="Cetak Ulang Struk Faktur Ini" style="background:#0f172a; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>
-                  <button onclick="deleteTransactionRow(${inv.firstIndex})" title="Hapus Faktur Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>
+                  ${deleteBtnHtml}
                 </div>
               </td>
             </tr>
@@ -2131,10 +2151,12 @@
         });
       }
 
-      const netProfit = totalOmset - totalExpense;
-      document.getElementById('modalTotalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
-      document.getElementById('modalSummaryExpense').innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
-      document.getElementById('modalNetProfit').innerText = (netProfit < 0 ? '-Rp ' : 'Rp ') + Math.abs(netProfit).toLocaleString('id-ID');
+      if (isOwnerMode) {
+        const netProfit = totalOmset - totalExpense;
+        document.getElementById('modalTotalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
+        document.getElementById('modalSummaryExpense').innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
+        document.getElementById('modalNetProfit').innerText = (netProfit < 0 ? '-Rp ' : 'Rp ') + Math.abs(netProfit).toLocaleString('id-ID');
+      }
     }
 
     function closeHistoryModal() {
