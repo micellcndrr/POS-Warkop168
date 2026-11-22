@@ -68,14 +68,12 @@
 
     .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 10px; }
     .row-summary.total { font-weight: 700; font-size: 16px; color: #16a34a; margin-bottom: 10px; display: flex; justify-content: space-between; }
-    .btn-action { width: 100%; padding: 9px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
+    .btn-action { width: 100%; padding: 9px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
     .btn-pay-main { background: #16a34a; color: #fff; font-size: 14px; padding: 11px; }
-    .btn-forecast { background: #7c3aed; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
-    .btn-history { background: #0284c7; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: #ffffff; padding: 16px; border-radius: 10px; width: 95%; max-width: 650px; max-height: 90vh; display: flex; flex-direction: column; overflow-y: auto; }
 
     .payment-tabs { display: flex; gap: 6px; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
@@ -119,6 +117,23 @@
     .admin-section-box { margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
     .admin-section-title { font-weight: 700; font-size: 12px; margin-bottom: 8px; color: #0f172a; display: flex; align-items: center; justify-content: space-between; }
 
+    .owner-report-toolbar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-owner-tool {
+      border: none;
+      padding: 10px 8px;
+      border-radius: 7px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-align: center;
+    }
+
     .void-pin-card {
       margin-top: 10px;
       padding: 12px;
@@ -153,6 +168,14 @@
     .stat-card-title { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
     .stat-card-value { font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px; }
 
+    /* Styling Khusus Neraca & Laba Rugi */
+    .neraca-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .neraca-box { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; }
+    .neraca-box-header { font-size: 13px; font-weight: 700; padding-bottom: 6px; margin-bottom: 8px; border-bottom: 2px solid #0f172a; color: #0f172a; display: flex; justify-content: space-between; }
+    .neraca-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
+    .neraca-row.sub { padding-left: 12px; color: #475569; font-size: 11px; }
+    .neraca-row.total-row { border-top: 2px solid #94a3b8; border-bottom: 2px solid #0f172a; font-weight: 700; font-size: 13px; margin-top: 6px; padding: 6px 0; background: #f8fafc; }
+
     @media (max-width: 1024px) {
       .menu-panel { padding: 12px; }
       .cart-panel { min-width: 270px; max-width: 310px; padding: 12px; }
@@ -166,8 +189,9 @@
       body { overflow: auto; }
       .container { flex-direction: column; height: 100vh; }
       .menu-panel { flex: 1; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
-      .cart-panel { flex: none; height: 310px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
-      .admin-form-grid-4, .admin-form-grid-5 { grid-template-columns: 1fr; }
+      .cart-panel { flex: none; height: 270px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
+      .admin-form-grid-4, .admin-form-grid-5, .neraca-grid { grid-template-columns: 1fr; }
+      .owner-report-toolbar { grid-template-columns: repeat(2, 1fr); }
     }
 
     #receiptPrintArea { display: none; }
@@ -253,9 +277,7 @@
         </div>
 
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Pembayaran</button>
-        <button class="btn-action btn-forecast" onclick="openForecastModal()">📈 Forecast Penjualan</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran</button>
-        <button class="btn-action btn-history" onclick="openHistoryModal()">📜 Tutup Buku Bulanan</button>
         <button class="btn-action btn-clear" onclick="requestClearCartWithPin()">🔒 Kosongkan Keranjang</button>
       </div>
     </div>
@@ -327,54 +349,7 @@
     </div>
   </div>
 
-  <!-- Modal Forecast Penjualan -->
-  <div id="forecastModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 720px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
-        <h3>📈 Forecast Penjualan & Estimasi Stok (30 Hari Depan)</h3>
-        <button onclick="closeForecastModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <div class="stat-card-grid">
-        <div class="stat-card">
-          <div class="stat-card-title">Proyeksi Omset Bulanan</div>
-          <div class="stat-card-value" id="forecastTotalSalesText" style="color:#2563eb;">Rp 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-title">Rata-Rata Omset / Hari</div>
-          <div class="stat-card-value" id="forecastDailyAvgText" style="color:#16a34a;">Rp 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-title">Tren Penjualan</div>
-          <div class="stat-card-value" id="forecastTrendText" style="color:#7c3aed;">0%</div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
-        <h4 style="margin-bottom:8px; color:#0f172a;">📊 Estimasi Demand Penjualan per Menu</h4>
-        <div style="max-height:300px; overflow-y:auto;">
-          <table class="custom-table" style="background:#fff;">
-            <thead>
-              <tr>
-                <th>Nama Menu</th>
-                <th>Terjual Bulan Ini</th>
-                <th>Rata-Rata / Hari</th>
-                <th>Proyeksi 30 Hari</th>
-                <th>Sisa Stok</th>
-              </tr>
-            </thead>
-            <tbody id="forecastMenuTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div style="margin-top:15px; text-align:right;">
-        <button onclick="closeForecastModal()" style="background:#0f172a; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Tutup Analisis</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Pengeluaran -->
+  <!-- Modal Pengeluaran (Input Kasir) -->
   <div id="expenseModal" class="modal-overlay">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -383,7 +358,7 @@
       </div>
 
       <form style="display:grid; grid-template-columns: 2fr 1fr auto; gap:8px;" onsubmit="addExpense(event)">
-        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan" required style="margin:0;">
+        <input type="text" id="expenseName" class="input-field" placeholder="Keterangan (ex: Es batu, Gas, Kopi)" required style="margin:0;">
         <input type="number" id="expenseAmount" class="input-field" placeholder="Nominal (Rp)" required style="margin:0;">
         <button type="submit" style="background:#dc2626; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer; font-weight:600;">+ Catat</button>
       </form>
@@ -403,68 +378,41 @@
       </div>
 
       <div style="margin-top:15px; text-align:right;">
-        <strong>Total Pengeluaran: <span id="modalTotalExpense" style="color:#dc2626;">Rp 0</span></strong>
+        <strong>Total Pengeluaran Tercatat: <span id="modalTotalExpense" style="color:#dc2626;">Rp 0</span></strong>
       </div>
     </div>
   </div>
 
-  <!-- Modal Tutup Buku Bulanan -->
-  <div id="historyModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 880px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3>Laporan Penjualan & Tutup Buku Bulanan</h3>
-        <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
-      </div>
-
-      <div style="margin-bottom:8px;">
-        <input type="text" id="historySearchInput" class="input-field" placeholder="🔍 Cari No. Faktur (contoh: INV-2026...) atau nama menu..." oninput="renderHistoryTable()" style="margin:0;">
-      </div>
-
-      <div style="overflow-y:auto; flex:1;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>No. Faktur</th>
-              <th>Tanggal & Jam</th>
-              <th>Rincian Item</th>
-              <th>Total Qty</th>
-              <th>Metode</th>
-              <th>Total Faktur</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody"></tbody>
-        </table>
-      </div>
-
-      <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Omset Bulanan:</span>
-          <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
-          <span>Total Pengeluaran Bulanan:</span>
-          <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-          <span>Laba Bersih Bulanan:</span>
-          <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
-          <button onclick="forceClearStuckTransactions()" style="background:#475569; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;">🧹 Hapus Paksa Data Nyangkut</button>
-          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Admin Dashboard -->
+  <!-- Modal Admin Dashboard (KHUSUS OWNER) -->
   <div id="adminModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 820px; height: 90vh;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px;">
-        <h3>🔑 Dashboard Owner (Cloud Real-Time)</h3>
+    <div class="modal-content" style="max-width: 860px; height: 92vh;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #f1f5f9; padding-bottom:10px; margin-bottom:10px;">
+        <h3>🔑 Dashboard Owner — Laporan Keuangan & Kontrol Toko</h3>
         <button onclick="logoutAdmin()" style="background:#dc2626; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">🔒 Logout</button>
+      </div>
+
+      <!-- Ringkasan Omset, Pengeluaran & Laba Bersih Bulan Ini (Khusus Owner) -->
+      <div class="stat-card-grid" style="margin-bottom:6px;">
+        <div class="stat-card" style="background:#f0fdf4; border-color:#bbf7d0;">
+          <div class="stat-card-title" style="color:#15803d;">Omset Penjualan Bulan Ini</div>
+          <div class="stat-card-value" id="ownerCardOmset" style="color:#16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card" style="background:#fef2f2; border-color:#fecaca;">
+          <div class="stat-card-title" style="color:#b91c1c;">Pengeluaran Bulan Ini</div>
+          <div class="stat-card-value" id="ownerCardExpense" style="color:#dc2626;">Rp 0</div>
+        </div>
+        <div class="stat-card" style="background:#eff6ff; border-color:#bfdbfe;">
+          <div class="stat-card-title" style="color:#1d4ed8;">Laba Bersih Bulan Ini</div>
+          <div class="stat-card-value" id="ownerCardProfit" style="color:#2563eb;">Rp 0</div>
+        </div>
+      </div>
+
+      <!-- Tombol Menu Laporan Khusus Owner -->
+      <div class="owner-report-toolbar">
+        <button onclick="openNeracaModal()" class="btn-owner-tool" style="background:#0f766e;">📊 Neraca & Laba Rugi</button>
+        <button onclick="openHistoryModal()" class="btn-owner-tool" style="background:#0284c7;">📜 Tutup Buku Bulanan</button>
+        <button onclick="openForecastModal()" class="btn-owner-tool" style="background:#7c3aed;">📈 Forecast Penjualan</button>
+        <button onclick="exportMonthlyRecapExcel()" class="btn-owner-tool" style="background:#15803d;">📥 Download Excel</button>
       </div>
 
       <!-- PIN Void Acak 4 Angka (Otomatis Berubah Setelah Dipakai) -->
@@ -544,15 +492,208 @@
         </div>
       </div>
 
-      <div style="margin-top:12px; border-top:2px solid #f1f5f9; padding-top:10px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+      <div style="margin-top:10px; border-top:2px solid #f1f5f9; padding-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
         <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📋 Audit Log Restok</button>
-        <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📥 Download Excel Bulanan</button>
+        <span style="font-size:11px; color:#64748b;">Semua laporan keuangan terlindungi PIN Owner.</span>
       </div>
     </div>
   </div>
 
-  <!-- Modal Log Audit Restok -->
-  <div id="restockLogModal" class="modal-overlay">
+  <!-- Modal Neraca & Laba Rugi (KHUSUS OWNER) -->
+  <div id="neracaModal" class="modal-overlay" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 860px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <div>
+          <h3 style="color:#0f172a;">📊 Laporan Neraca & Laba Rugi — Warkop Pancong 168</h3>
+          <small style="color:#64748b;" id="neracaPeriodSubtitle">Periode Berjalan</small>
+        </div>
+        <button onclick="closeNeracaModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="stat-card-grid">
+        <div class="stat-card" style="background:#f0fdf4; border-color:#bbf7d0;">
+          <div class="stat-card-title" style="color:#15803d;">Total Pendapatan (Omset)</div>
+          <div class="stat-card-value" id="neracaCardRevenue" style="color:#16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card" style="background:#fef2f2; border-color:#fecaca;">
+          <div class="stat-card-title" style="color:#b91c1c;">Total Beban Operasional</div>
+          <div class="stat-card-value" id="neracaCardExpense" style="color:#dc2626;">Rp 0</div>
+        </div>
+        <div class="stat-card" style="background:#eff6ff; border-color:#bfdbfe;">
+          <div class="stat-card-title" style="color:#1d4ed8;">Laba / Rugi Bersih</div>
+          <div class="stat-card-value" id="neracaCardNetProfit" style="color:#2563eb;">Rp 0</div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:12px; font-weight:600; color:#334155;">💼 Modal Awal Kas Usaha (Rp):</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="number" id="initialCapitalInput" class="input-field" style="margin:0; width:160px; padding:5px 8px; font-size:12px;" placeholder="0">
+          <button onclick="saveInitialCapital()" style="background:#0f766e; color:#fff; border:none; padding:6px 12px; border-radius:5px; font-size:12px; font-weight:600; cursor:pointer;">Simpan Modal</button>
+        </div>
+      </div>
+
+      <div class="neraca-grid">
+        <div class="neraca-box">
+          <div class="neraca-box-header">
+            <span>I. LAPORAN LABA RUGI</span>
+            <span id="neracaProfitMarginBadge" style="font-size:11px; background:#dcfce7; color:#15803d; padding:1px 6px; border-radius:8px;">Margin: 0%</span>
+          </div>
+
+          <div style="font-size:11px; font-weight:700; color:#16a34a; margin-bottom:2px;">A. Pendapatan Usaha</div>
+          <div id="neracaRevenueBreakdown"></div>
+          <div class="neraca-row" style="font-weight:700; background:#f0fdf4; padding:4px 6px;">
+            <span>Total Pendapatan</span>
+            <span id="neracaTotalRevenueText" style="color:#16a34a;">Rp 0</span>
+          </div>
+
+          <div style="font-size:11px; font-weight:700; color:#dc2626; margin:8px 0 2px 0;">B. Beban Operasional</div>
+          <div id="neracaExpenseBreakdown" style="max-height:110px; overflow-y:auto;"></div>
+          <div class="neraca-row" style="font-weight:700; background:#fef2f2; padding:4px 6px;">
+            <span>Total Beban</span>
+            <span id="neracaTotalExpenseText" style="color:#dc2626;">Rp 0</span>
+          </div>
+
+          <div class="neraca-row total-row" style="padding:6px; font-size:13px;">
+            <span id="neracaNetStatusLabel">LABA BERSIH</span>
+            <span id="neracaNetProfitText" style="color:#2563eb;">Rp 0</span>
+          </div>
+        </div>
+
+        <div class="neraca-box">
+          <div class="neraca-box-header">
+            <span>II. NERACA (AKTIVA & PASIVA)</span>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#0f766e; margin-bottom:2px;">AKTIVA (ASET)</div>
+          <div class="neraca-row sub"><span>• Kas Tunai</span><strong id="neracaCashOnHand">Rp 0</strong></div>
+          <div class="neraca-row sub"><span>• Saldo Non-Tunai</span><strong id="neracaNonCashBalance">Rp 0</strong></div>
+          <div class="neraca-row sub"><span>• Persediaan Stok</span><strong id="neracaInventoryValue">Rp 0</strong></div>
+          <div class="neraca-row" style="font-weight:700; background:#f0fdfa; padding:4px 6px;">
+            <span>TOTAL AKTIVA</span>
+            <span id="neracaTotalAssets" style="color:#0f766e;">Rp 0</span>
+          </div>
+
+          <div style="font-size:11px; font-weight:700; color:#0f766e; margin:8px 0 2px 0;">PASIVA (EKUITAS)</div>
+          <div class="neraca-row sub"><span>• Modal Awal Usaha</span><strong id="neracaCapitalDisplay">Rp 0</strong></div>
+          <div class="neraca-row sub"><span>• Ekuitas Persediaan Stok</span><strong id="neracaStockEquityDisplay">Rp 0</strong></div>
+          <div class="neraca-row sub"><span>• Laba / (Rugi) Berjalan</span><strong id="neracaCurrentEarningsDisplay">Rp 0</strong></div>
+          <div class="neraca-row total-row" style="padding:6px; font-size:13px;">
+            <span>TOTAL PASIVA</span>
+            <span id="neracaTotalLiabilitiesEquity" style="color:#0f766e;">Rp 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <button onclick="printNeracaStatement()" style="background:#0f172a; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">🖨️ Cetak Laba Rugi & Neraca</button>
+        <div style="display:flex; gap:8px;">
+          <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📥 Download Excel</button>
+          <button onclick="closeNeracaModal()" style="background:#64748b; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Kembali</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tutup Buku Bulanan (KHUSUS OWNER) -->
+  <div id="historyModal" class="modal-overlay" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 880px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3>📜 Laporan Penjualan & Tutup Buku Bulanan (Khusus Owner)</h3>
+        <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <input type="text" id="historySearchInput" class="input-field" placeholder="🔍 Cari No. Faktur (contoh: INV-2026...) atau nama menu..." oninput="renderHistoryTable()" style="margin:0;">
+      </div>
+
+      <div style="overflow-y:auto; flex:1;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>No. Faktur</th>
+              <th>Tanggal & Jam</th>
+              <th>Rincian Item</th>
+              <th>Total Qty</th>
+              <th>Metode</th>
+              <th>Total Faktur</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:15px; border-top:1px solid #e2e8f0; padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Omset Bulanan:</span>
+          <strong id="modalTotalOmset" style="color:#16a34a;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:14px;">
+          <span>Total Pengeluaran Bulanan:</span>
+          <strong id="modalSummaryExpense" style="color:#dc2626;">Rp 0</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+          <span>Laba Bersih Bulanan:</span>
+          <strong id="modalNetProfit" style="color:#2563eb;">Rp 0</strong>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <button onclick="forceClearStuckTransactions()" style="background:#475569; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:700;">🧹 Hapus Paksa Data Nyangkut</button>
+          <button onclick="resetMonthlyData()" style="background:#ef4444; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:700;">⚠️ Tutup Buku Bulan Ini (Reset Bulanan)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Forecast Penjualan (KHUSUS OWNER) -->
+  <div id="forecastModal" class="modal-overlay" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 720px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #f1f5f9; padding-bottom:10px;">
+        <h3>📈 Forecast Penjualan & Estimasi Stok (30 Hari Depan)</h3>
+        <button onclick="closeForecastModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="stat-card-grid">
+        <div class="stat-card">
+          <div class="stat-card-title">Proyeksi Omset Bulanan</div>
+          <div class="stat-card-value" id="forecastTotalSalesText" style="color:#2563eb;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Rata-Rata Omset / Hari</div>
+          <div class="stat-card-value" id="forecastDailyAvgText" style="color:#16a34a;">Rp 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-title">Tren Penjualan</div>
+          <div class="stat-card-value" id="forecastTrendText" style="color:#7c3aed;">0%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">
+        <h4 style="margin-bottom:8px; color:#0f172a;">📊 Estimasi Demand Penjualan per Menu</h4>
+        <div style="max-height:300px; overflow-y:auto;">
+          <table class="custom-table" style="background:#fff;">
+            <thead>
+              <tr>
+                <th>Nama Menu</th>
+                <th>Terjual Bulan Ini</th>
+                <th>Rata-Rata / Hari</th>
+                <th>Proyeksi 30 Hari</th>
+                <th>Sisa Stok</th>
+              </tr>
+            </thead>
+            <tbody id="forecastMenuTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="margin-top:15px; text-align:right;">
+        <button onclick="closeForecastModal()" style="background:#0f172a; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Tutup Analisis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Log Audit Restok (KHUSUS OWNER) -->
+  <div id="restockLogModal" class="modal-overlay" style="z-index: 1100;">
     <div class="modal-content" style="max-width: 650px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <h3>📋 Log Audit Riwayat Barang Masuk</h3>
@@ -733,10 +874,12 @@
     let monthlyTransactions = JSON.parse(localStorage.getItem('warkop_monthly_tx')) || [];
     let monthlyExpenses = JSON.parse(localStorage.getItem('warkop_monthly_exp')) || [];
     let restockLogs = JSON.parse(localStorage.getItem('warkop_restock_logs')) || [];
+    let initialCapital = parseFloat(localStorage.getItem('warkop_initial_capital')) || 0;
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || 'qris.warkop.JPG';
 
     const adminPin = '4M112208';
+    let isOwnerLoggedIn = false;
 
     function toArraySafe(val) {
       if (!val) return [];
@@ -744,7 +887,6 @@
       return arr.filter(item => item && typeof item === 'object' && item.Menu);
     }
 
-    // Generator Nomor Faktur Otomatis: INV-YYYYMMDD-0001
     function generateNextInvoiceNumber() {
       const now = new Date();
       const yyyy = now.getFullYear();
@@ -768,7 +910,6 @@
       return `${prefix}${nextSeq}`;
     }
 
-    // PIN Void 4 Angka Acak (untuk kurangi / hapus keranjang)
     function generateRandom4DigitPin() {
       return Math.floor(1000 + Math.random() * 9000).toString();
     }
@@ -776,7 +917,6 @@
     let currentVoidPin = localStorage.getItem('warkop_void_pin') || generateRandom4DigitPin();
     localStorage.setItem('warkop_void_pin', currentVoidPin);
 
-    // Timer Notifikasi Tanpa Pesanan (30 Menit)
     const IDLE_LIMIT_MS = 30 * 60 * 1000;
     let lastOrderTime = parseInt(localStorage.getItem('warkop_last_order_time')) || Date.now();
     let idlePopupShownForCurrentCycle = false;
@@ -807,6 +947,36 @@
       } else {
         alert('❌ PIN Owner 4 Angka Salah! Perubahan pesanan dibatalkan.');
         return false;
+      }
+    }
+
+    function ensureOwnerAccess() {
+      if (isOwnerLoggedIn) return true;
+      const inputPin = prompt('🔒 Akses Terbatas! Masukkan PIN Owner:');
+      if (inputPin === adminPin) {
+        isOwnerLoggedIn = true;
+        return true;
+      }
+      if (inputPin !== null) {
+        alert('❌ PIN Owner Salah! Laporan hanya dapat dibuka oleh Owner.');
+      }
+      return false;
+    }
+
+    function updateOwnerDashboardSummaryCards() {
+      const totalOmset = monthlyTransactions.reduce((sum, tx) => sum + (tx.Total || 0), 0);
+      const totalExpense = monthlyExpenses.reduce((sum, exp) => sum + (exp.Nominal || 0), 0);
+      const netProfit = totalOmset - totalExpense;
+
+      const omsetEl = document.getElementById('ownerCardOmset');
+      const expEl = document.getElementById('ownerCardExpense');
+      const profitEl = document.getElementById('ownerCardProfit');
+
+      if (omsetEl) omsetEl.innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
+      if (expEl) expEl.innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
+      if (profitEl) {
+        profitEl.innerText = (netProfit < 0 ? '-Rp ' : 'Rp ') + Math.abs(netProfit).toLocaleString('id-ID');
+        profitEl.style.color = netProfit >= 0 ? '#2563eb' : '#dc2626';
       }
     }
 
@@ -880,6 +1050,9 @@
           renderAdminStockTable();
           populateRestockSelect();
         }
+        if (document.getElementById('neracaModal').style.display === 'flex') {
+          renderNeracaReport();
+        }
       });
 
       db.ref('warkop_data/voidPin').on('value', (snapshot) => {
@@ -908,8 +1081,12 @@
         const cloudTx = toArraySafe(snapshot.val());
         monthlyTransactions = cloudTx;
         localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+        updateOwnerDashboardSummaryCards();
         if (document.getElementById('historyModal').style.display === 'flex') {
           renderHistoryTable();
+        }
+        if (document.getElementById('neracaModal').style.display === 'flex') {
+          renderNeracaReport();
         }
       });
 
@@ -918,8 +1095,23 @@
         const cloudExp = Array.isArray(raw) ? raw.filter(Boolean) : (raw ? Object.values(raw).filter(Boolean) : []);
         monthlyExpenses = cloudExp;
         localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
+        updateOwnerDashboardSummaryCards();
         if (document.getElementById('expenseModal').style.display === 'flex') {
           renderExpenseTable();
+        }
+        if (document.getElementById('neracaModal').style.display === 'flex') {
+          renderNeracaReport();
+        }
+      });
+
+      db.ref('warkop_data/initialCapital').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (typeof val === 'number' && !isNaN(val)) {
+          initialCapital = val;
+          localStorage.setItem('warkop_initial_capital', initialCapital.toString());
+          if (document.getElementById('neracaModal').style.display === 'flex') {
+            renderNeracaReport();
+          }
         }
       });
 
@@ -958,6 +1150,7 @@
 
     function saveTransactionsToCloud() {
       localStorage.setItem('warkop_monthly_tx', JSON.stringify(monthlyTransactions));
+      updateOwnerDashboardSummaryCards();
       if (isCloudReady && db) {
         if (monthlyTransactions.length > 0) {
           db.ref('warkop_data/monthlyTransactions').set(monthlyTransactions);
@@ -969,6 +1162,7 @@
 
     function saveExpensesToCloud() {
       localStorage.setItem('warkop_monthly_exp', JSON.stringify(monthlyExpenses));
+      updateOwnerDashboardSummaryCards();
       if (isCloudReady && db) {
         if (monthlyExpenses.length > 0) {
           db.ref('warkop_data/monthlyExpenses').set(monthlyExpenses);
@@ -988,7 +1182,9 @@
     function loginAdmin() {
       const inputPin = prompt('Masukkan PIN Owner / Admin:');
       if (inputPin === adminPin) {
+        isOwnerLoggedIn = true;
         updateVoidPinUI();
+        updateOwnerDashboardSummaryCards();
         renderAdminStockTable();
         populateRestockSelect();
         document.getElementById('qrisUrlInput').value = savedQrisUrl;
@@ -999,7 +1195,12 @@
     }
 
     function logoutAdmin() {
+      isOwnerLoggedIn = false;
       document.getElementById('adminModal').style.display = 'none';
+      document.getElementById('neracaModal').style.display = 'none';
+      document.getElementById('historyModal').style.display = 'none';
+      document.getElementById('forecastModal').style.display = 'none';
+      document.getElementById('restockLogModal').style.display = 'none';
     }
 
     function renderMenu(items) {
@@ -1280,6 +1481,7 @@
     }
 
     function reprintTransactionRow(originalIndex) {
+      if (!ensureOwnerAccess()) return;
       const targetTx = monthlyTransactions[originalIndex];
       if (!targetTx) return;
 
@@ -1339,6 +1541,7 @@
     }
 
     function deleteTransactionRow(originalIndex) {
+      if (!ensureOwnerAccess()) return;
       const targetTx = monthlyTransactions[originalIndex];
       if (!targetTx) {
         monthlyTransactions.splice(originalIndex, 1);
@@ -1350,19 +1553,12 @@
       const invoiceNo = String(targetTx.NoFaktur || '').trim();
       const hasValidInvoice = invoiceNo !== '' && invoiceNo !== '-' && invoiceNo !== 'undefined' && invoiceNo !== 'null';
 
-      const enteredPin = prompt(`🔒 Masukkan PIN Owner untuk menghapus transaksi${hasValidInvoice ? ' Faktur ' + invoiceNo : ' "' + targetTx.Menu + '"'}:`);
-      if (enteredPin === null) return;
-      if (enteredPin.trim() !== adminPin) {
-        alert('❌ PIN Owner Salah! Penghapusan dibatalkan.');
-        return;
-      }
-
       const matched = hasValidInvoice
         ? monthlyTransactions.filter(tx => String(tx.NoFaktur || '').trim() === invoiceNo)
         : [targetTx];
 
       const itemSummary = matched.map(m => `- ${m.Menu} (${m.Qty}x) = Rp ${(m.Total || 0).toLocaleString('id-ID')}`).join('\n');
-      if (!confirm(`Yakin ingin menghapus seluruh transaksi pada faktur ini?\n\nDetail:\n${itemSummary}`)) {
+      if (!confirm(`Yakin ingin menghapus seluruh transaksi pada faktur ${hasValidInvoice ? invoiceNo : ''}?\n\nDetail:\n${itemSummary}`)) {
         return;
       }
 
@@ -1389,13 +1585,7 @@
     }
 
     function forceClearStuckTransactions() {
-      const enteredPin = prompt('🔒 Masukkan PIN Owner untuk menghapus paksa seluruh data transaksi nyangkut di Cloud & Lokal:');
-      if (enteredPin === null) return;
-      if (enteredPin.trim() !== adminPin) {
-        alert('❌ PIN Owner Salah!');
-        return;
-      }
-
+      if (!ensureOwnerAccess()) return;
       if (!confirm('⚠️ Yakin ingin mengosongkan paksa seluruh daftar transaksi penjualan saat ini?')) {
         return;
       }
@@ -1405,6 +1595,7 @@
       if (isCloudReady && db) {
         db.ref('warkop_data/monthlyTransactions').remove();
       }
+      updateOwnerDashboardSummaryCards();
       renderHistoryTable();
       alert('✅ Seluruh transaksi nyangkut berhasil dibersihkan dari Cloud dan perangkat.');
     }
@@ -1514,8 +1705,188 @@
       }
     }
 
-    /* FORECAST PENJUALAN */
+    /* =================================================================
+       4. NERACA & LAPORAN LABA RUGI (KHUSUS OWNER)
+       ================================================================= */
+    function computeNeracaAndProfitLoss() {
+      let totalRevenue = 0;
+      let cashRevenue = 0;
+      let qrisRevenue = 0;
+      let transferRevenue = 0;
+      let debitRevenue = 0;
+
+      monthlyTransactions.forEach(tx => {
+        const amt = tx.Total || 0;
+        totalRevenue += amt;
+        const m = String(tx.Metode || 'Tunai').toLowerCase();
+        if (m.includes('tunai')) cashRevenue += amt;
+        else if (m.includes('qris')) qrisRevenue += amt;
+        else if (m.includes('transfer')) transferRevenue += amt;
+        else if (m.includes('debit')) debitRevenue += amt;
+        else cashRevenue += amt;
+      });
+
+      const totalExpense = monthlyExpenses.reduce((sum, e) => sum + (e.Nominal || 0), 0);
+      const netProfit = totalRevenue - totalExpense;
+      const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100) : 0;
+
+      const inventoryValue = products.reduce((sum, p) => sum + ((p.stock || 0) * (p.price || 0)), 0);
+      const nonCashBalance = qrisRevenue + transferRevenue + debitRevenue;
+      const cashOnHand = initialCapital + cashRevenue - totalExpense;
+
+      const totalAssets = cashOnHand + nonCashBalance + inventoryValue;
+      const totalLiabilitiesEquity = initialCapital + inventoryValue + netProfit;
+
+      return {
+        totalRevenue,
+        cashRevenue,
+        qrisRevenue,
+        transferRevenue,
+        debitRevenue,
+        totalExpense,
+        netProfit,
+        profitMargin,
+        inventoryValue,
+        nonCashBalance,
+        cashOnHand,
+        totalAssets,
+        totalLiabilitiesEquity
+      };
+    }
+
+    function openNeracaModal() {
+      if (!ensureOwnerAccess()) return;
+      document.getElementById('initialCapitalInput').value = initialCapital || '';
+      renderNeracaReport();
+      document.getElementById('neracaModal').style.display = 'flex';
+    }
+
+    function closeNeracaModal() {
+      document.getElementById('neracaModal').style.display = 'none';
+    }
+
+    function saveInitialCapital() {
+      if (!ensureOwnerAccess()) return;
+      const val = parseFloat(document.getElementById('initialCapitalInput').value) || 0;
+      if (val < 0) {
+        alert('Modal awal tidak boleh negatif!');
+        return;
+      }
+      initialCapital = val;
+      localStorage.setItem('warkop_initial_capital', initialCapital.toString());
+      if (isCloudReady && db) {
+        db.ref('warkop_data/initialCapital').set(initialCapital);
+      }
+      renderNeracaReport();
+      alert('✅ Modal awal berhasil disimpan dan disesuaikan ke Neraca!');
+    }
+
+    function renderNeracaReport() {
+      const data = computeNeracaAndProfitLoss();
+      const now = new Date();
+      const monthYear = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      document.getElementById('neracaPeriodSubtitle').innerText = `Periode: ${monthYear} | Dicetak: ${now.toLocaleDateString('id-ID')}`;
+
+      document.getElementById('neracaCardRevenue').innerText = 'Rp ' + data.totalRevenue.toLocaleString('id-ID');
+      document.getElementById('neracaCardExpense').innerText = 'Rp ' + data.totalExpense.toLocaleString('id-ID');
+      const cardNetEl = document.getElementById('neracaCardNetProfit');
+      cardNetEl.innerText = (data.netProfit < 0 ? '-Rp ' : 'Rp ') + Math.abs(data.netProfit).toLocaleString('id-ID');
+      cardNetEl.style.color = data.netProfit >= 0 ? '#16a34a' : '#dc2626';
+
+      const badgeEl = document.getElementById('neracaProfitMarginBadge');
+      badgeEl.innerText = `Margin: ${data.profitMargin.toFixed(1)}%`;
+      badgeEl.style.background = data.netProfit >= 0 ? '#dcfce7' : '#fee2e2';
+      badgeEl.style.color = data.netProfit >= 0 ? '#15803d' : '#b91c1c';
+
+      document.getElementById('neracaRevenueBreakdown').innerHTML = `
+        <div class="neraca-row sub"><span>• Penjualan Tunai</span><span>Rp ${data.cashRevenue.toLocaleString('id-ID')}</span></div>
+        <div class="neraca-row sub"><span>• Penjualan QRIS</span><span>Rp ${data.qrisRevenue.toLocaleString('id-ID')}</span></div>
+        <div class="neraca-row sub"><span>• Penjualan Transfer</span><span>Rp ${data.transferRevenue.toLocaleString('id-ID')}</span></div>
+        <div class="neraca-row sub"><span>• Penjualan Debit EDC</span><span>Rp ${data.debitRevenue.toLocaleString('id-ID')}</span></div>
+      `;
+      document.getElementById('neracaTotalRevenueText').innerText = 'Rp ' + data.totalRevenue.toLocaleString('id-ID');
+
+      let expHtml = '';
+      if (monthlyExpenses.length === 0) {
+        expHtml = `<div class="neraca-row sub"><span>Belum ada pengeluaran tercatat</span><span>Rp 0</span></div>`;
+      } else {
+        monthlyExpenses.forEach(exp => {
+          expHtml += `<div class="neraca-row sub"><span>• ${exp.Tanggal} - ${exp.Nama}</span><span>Rp ${(exp.Nominal || 0).toLocaleString('id-ID')}</span></div>`;
+        });
+      }
+      document.getElementById('neracaExpenseBreakdown').innerHTML = expHtml;
+      document.getElementById('neracaTotalExpenseText').innerText = 'Rp ' + data.totalExpense.toLocaleString('id-ID');
+
+      const netLabelEl = document.getElementById('neracaNetStatusLabel');
+      const netValEl = document.getElementById('neracaNetProfitText');
+      if (data.netProfit >= 0) {
+        netLabelEl.innerText = 'LABA BERSIH USAHA';
+        netValEl.innerText = 'Rp ' + data.netProfit.toLocaleString('id-ID');
+        netValEl.style.color = '#16a34a';
+      } else {
+        netLabelEl.innerText = 'RUGI BERSIH USAHA';
+        netValEl.innerText = '-Rp ' + Math.abs(data.netProfit).toLocaleString('id-ID');
+        netValEl.style.color = '#dc2626';
+      }
+
+      const fmtRp = (n) => (n < 0 ? '-Rp ' : 'Rp ') + Math.abs(n).toLocaleString('id-ID');
+      document.getElementById('neracaCashOnHand').innerText = fmtRp(data.cashOnHand);
+      document.getElementById('neracaNonCashBalance').innerText = fmtRp(data.nonCashBalance);
+      document.getElementById('neracaInventoryValue').innerText = fmtRp(data.inventoryValue);
+      document.getElementById('neracaTotalAssets').innerText = fmtRp(data.totalAssets);
+
+      document.getElementById('neracaCapitalDisplay').innerText = fmtRp(initialCapital);
+      document.getElementById('neracaStockEquityDisplay').innerText = fmtRp(data.inventoryValue);
+      document.getElementById('neracaCurrentEarningsDisplay').innerText = fmtRp(data.netProfit);
+      document.getElementById('neracaTotalLiabilitiesEquity').innerText = fmtRp(data.totalLiabilitiesEquity);
+    }
+
+    function printNeracaStatement() {
+      if (!ensureOwnerAccess()) return;
+      const data = computeNeracaAndProfitLoss();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const fmtRp = (n) => (n < 0 ? '-Rp ' : 'Rp ') + Math.abs(n).toLocaleString('id-ID');
+
+      const printArea = document.getElementById('receiptPrintArea');
+      printArea.innerHTML = `
+        <div class="receipt-header">
+          <h2 style="font-size:12px; font-weight:bold;">WARKOP PANCONG 168</h2>
+          <p style="font-size:9px; font-weight:bold;">LAPORAN LABA RUGI & NERACA</p>
+          <p style="font-size:9px;">Cetak: ${dateStr} ${timeStr}</p>
+        </div>
+        <div class="receipt-divider"></div>
+        <div style="font-weight:bold; margin-bottom:2px;">I. LAPORAN LABA RUGI</div>
+        <div class="receipt-row"><span>Omset Tunai</span><span>${fmtRp(data.cashRevenue)}</span></div>
+        <div class="receipt-row"><span>Omset QRIS</span><span>${fmtRp(data.qrisRevenue)}</span></div>
+        <div class="receipt-row"><span>Omset Transfer</span><span>${fmtRp(data.transferRevenue)}</span></div>
+        <div class="receipt-row"><span>Omset Debit</span><span>${fmtRp(data.debitRevenue)}</span></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>Total Pendapatan</span><span>${fmtRp(data.totalRevenue)}</span></div>
+        <div class="receipt-row"><span>Total Beban</span><span>${fmtRp(data.totalExpense)}</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>${data.netProfit >= 0 ? 'LABA BERSIH' : 'RUGI BERSIH'}</span><span>${fmtRp(data.netProfit)}</span></div>
+        <div class="receipt-divider"></div>
+        <div style="font-weight:bold; margin-bottom:2px;">II. NERACA (AKTIVA)</div>
+        <div class="receipt-row"><span>Kas Tunai</span><span>${fmtRp(data.cashOnHand)}</span></div>
+        <div class="receipt-row"><span>Saldo Non-Tunai</span><span>${fmtRp(data.nonCashBalance)}</span></div>
+        <div class="receipt-row"><span>Persediaan Stok</span><span>${fmtRp(data.inventoryValue)}</span></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>TOTAL AKTIVA</span><span>${fmtRp(data.totalAssets)}</span></div>
+        <div class="receipt-divider"></div>
+        <div style="font-weight:bold; margin-bottom:2px;">III. NERACA (PASIVA)</div>
+        <div class="receipt-row"><span>Modal Awal</span><span>${fmtRp(initialCapital)}</span></div>
+        <div class="receipt-row"><span>Ekuitas Stok</span><span>${fmtRp(data.inventoryValue)}</span></div>
+        <div class="receipt-row"><span>Laba/Rugi Jalan</span><span>${fmtRp(data.netProfit)}</span></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>TOTAL PASIVA</span><span>${fmtRp(data.totalLiabilitiesEquity)}</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-footer"><p>Warkop Pancong 168</p></div>
+      `;
+      window.print();
+    }
+
+    /* FORECAST PENJUALAN (KHUSUS OWNER) */
     function openForecastModal() {
+      if (!ensureOwnerAccess()) return;
       calculateForecastData();
       document.getElementById('forecastModal').style.display = 'flex';
     }
@@ -1582,7 +1953,7 @@
       });
     }
 
-    /* CATATAN PENGELUARAN & TUTUP BUKU */
+    /* CATATAN PENGELUARAN (INPUT HARIAN KASIR) */
     function openExpenseModal() {
       renderExpenseTable();
       document.getElementById('expenseModal').style.display = 'flex';
@@ -1616,6 +1987,7 @@
     }
 
     function deleteExpense(id) {
+      if (!ensureOwnerAccess()) return;
       monthlyExpenses = monthlyExpenses.filter(exp => exp.id !== id);
       saveExpensesToCloud();
       renderExpenseTable();
@@ -1647,14 +2019,15 @@
       document.getElementById('modalTotalExpense').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
     }
 
+    /* LAPORAN PENJUALAN & TUTUP BUKU BULANAN (KHUSUS OWNER) */
     function openHistoryModal() {
+      if (!ensureOwnerAccess()) return;
       const searchEl = document.getElementById('historySearchInput');
       if (searchEl) searchEl.value = '';
       renderHistoryTable();
       document.getElementById('historyModal').style.display = 'flex';
     }
 
-    // Gabungkan item dalam 1 transaksi menjadi 1 baris faktur utuh
     function groupTransactionsByInvoice() {
       const groupedList = [];
       const invoiceMap = new Map();
@@ -1688,7 +2061,6 @@
           grp.totalQty += (tx.Qty || 0);
           grp.grandTotal += (tx.Total || 0);
         } else {
-          // Data lama tanpa nomor faktur tetap tampil per transaksi
           groupedList.push({
             noFaktur: '-',
             tanggal: tx.Tanggal || '-',
@@ -1734,7 +2106,6 @@
       if (filteredInvoices.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data transaksi yang sesuai</td></tr>';
       } else {
-        // Tampilkan faktur terbaru di bagian paling atas
         [...filteredInvoices].reverse().forEach(inv => {
           const waktuText = inv.waktu ? `${inv.tanggal} (${inv.waktu})` : inv.tanggal;
           const itemsHtml = inv.items
@@ -1763,7 +2134,7 @@
       const netProfit = totalOmset - totalExpense;
       document.getElementById('modalTotalOmset').innerText = 'Rp ' + totalOmset.toLocaleString('id-ID');
       document.getElementById('modalSummaryExpense').innerText = 'Rp ' + totalExpense.toLocaleString('id-ID');
-      document.getElementById('modalNetProfit').innerText = 'Rp ' + netProfit.toLocaleString('id-ID');
+      document.getElementById('modalNetProfit').innerText = (netProfit < 0 ? '-Rp ' : 'Rp ') + Math.abs(netProfit).toLocaleString('id-ID');
     }
 
     function closeHistoryModal() {
@@ -1771,12 +2142,13 @@
     }
 
     function resetMonthlyData() {
+      if (!ensureOwnerAccess()) return;
       if (confirm('Yakin ingin Tutup Buku Bulan Ini? Seluruh transaksi dan catatan pengeluaran bulanan akan di-reset di Cloud.')) {
         monthlyTransactions = [];
         monthlyExpenses = [];
         saveTransactionsToCloud();
         saveExpensesToCloud();
-        openHistoryModal();
+        renderHistoryTable();
         alert('Tutup buku bulanan berhasil! Data bulan ini telah dibersihkan.');
       }
     }
@@ -1933,6 +2305,7 @@
     }
 
     function openRestockLogModal() {
+      if (!ensureOwnerAccess()) return;
       const tbody = document.getElementById('restockLogTableBody');
       tbody.innerHTML = '';
 
@@ -1959,6 +2332,7 @@
     }
 
     function exportMonthlyRecapExcel() {
+      if (!ensureOwnerAccess()) return;
       if (monthlyTransactions.length === 0 && monthlyExpenses.length === 0) {
         alert('Belum ada data transaksi atau pengeluaran bulan ini!');
         return;
@@ -1978,9 +2352,10 @@
 
       const totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
       const netProfit = totalOmset - totalExpense;
+      const neracaData = computeNeracaAndProfitLoss();
 
       const excelData = [
-        ["LAPORAN REKAP BULANAN WARKOP PANCONG 168"],
+        ["LAPORAN REKAP BULANAN, LABA RUGI & NERACA WARKOP PANCONG 168"],
         ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
         ["--- RINGKASAN PENJUALAN PER MENU ---"],
@@ -2024,24 +2399,34 @@
       excelData.push(["", "TOTAL PENGELUARAN BULANAN", "", "", "", totalExpense]);
       excelData.push([""]);
 
+      excelData.push(["--- LAPORAN LABA RUGI & NERACA ---"]);
+      excelData.push(["Pendapatan Tunai", neracaData.cashRevenue]);
+      excelData.push(["Pendapatan QRIS", neracaData.qrisRevenue]);
+      excelData.push(["Pendapatan Transfer", neracaData.transferRevenue]);
+      excelData.push(["Pendapatan Debit", neracaData.debitRevenue]);
+      excelData.push(["Total Omset Penjualan", totalOmset]);
+      excelData.push(["Total Pengeluaran Operasional", totalExpense]);
+      excelData.push(["LABA / RUGI BERSIH BULANAN", netProfit]);
+      excelData.push([""]);
+      excelData.push(["POSISI NERACA (AKTIVA vs PASIVA)"]);
+      excelData.push(["Kas Tunai", neracaData.cashOnHand, "Modal Awal", initialCapital]);
+      excelData.push(["Saldo Non-Tunai", neracaData.nonCashBalance, "Ekuitas Stok", neracaData.inventoryValue]);
+      excelData.push(["Persediaan Stok", neracaData.inventoryValue, "Laba/Rugi Berjalan", netProfit]);
+      excelData.push(["TOTAL AKTIVA", neracaData.totalAssets, "TOTAL PASIVA", neracaData.totalLiabilitiesEquity]);
+      excelData.push([""]);
+
       excelData.push(["--- LOG BARANG MASUK (RESTOK) ---"]);
       excelData.push(["Tanggal", "Nama Menu", "Tambahan Stok", "Keterangan"]);
 
       restockLogs.forEach(log => {
         excelData.push([log.Waktu, log.Menu, log.QtyTambahan, log.Keterangan]);
       });
-      excelData.push([""]);
-
-      excelData.push(["--- RINGKASAN LABA RUGI BULANAN ---"]);
-      excelData.push(["Total Omset Penjualan", totalOmset]);
-      excelData.push(["Total Pengeluaran Operasional", totalExpense]);
-      excelData.push(["LABA BERSIH BULANAN", netProfit]);
 
       const ws = XLSX.utils.aoa_to_sheet(excelData);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Rekap Bulanan");
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap Owner");
 
-      const fileName = `Rekap_Bulanan_Warkop_Pancong_168_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `Rekap_Owner_Warkop_Pancong_168_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
     }
 
