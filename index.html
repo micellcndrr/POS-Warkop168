@@ -86,7 +86,7 @@
 
     .qris-img-preview { width: 240px; height: 240px; border: 2px solid #0f172a; border-radius: 10px; object-fit: contain; margin: 10px auto; display: block; background: #fff; padding: 8px; }
     .custom-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 12px; }
+    .custom-table th, .custom-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; font-size: 12px; vertical-align: top; }
     .custom-table th { background: #f1f5f9; }
 
     .invoice-badge {
@@ -99,6 +99,13 @@
       font-family: 'Courier New', Courier, monospace;
       font-weight: 700;
       font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .invoice-item-line {
+      font-size: 12px;
+      line-height: 1.35;
+      color: #1e293b;
     }
 
     .action-btn-group {
@@ -403,7 +410,7 @@
 
   <!-- Modal Tutup Buku Bulanan -->
   <div id="historyModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 850px;">
+    <div class="modal-content" style="max-width: 880px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <h3>Laporan Penjualan & Tutup Buku Bulanan</h3>
         <button onclick="closeHistoryModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
@@ -419,10 +426,10 @@
             <tr>
               <th>No. Faktur</th>
               <th>Tanggal & Jam</th>
-              <th>Menu</th>
-              <th>Qty</th>
+              <th>Rincian Item</th>
+              <th>Total Qty</th>
               <th>Metode</th>
-              <th>Total</th>
+              <th>Total Faktur</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -897,7 +904,6 @@
         }
       });
 
-      // Cloud adalah satu-satunya sumber kebenaran agar transaksi terhapus tidak muncul lagi
       db.ref('warkop_data/monthlyTransactions').on('value', (snapshot) => {
         const cloudTx = toArraySafe(snapshot.val());
         monthlyTransactions = cloudTx;
@@ -1356,11 +1362,11 @@
         : [targetTx];
 
       const itemSummary = matched.map(m => `- ${m.Menu} (${m.Qty}x) = Rp ${(m.Total || 0).toLocaleString('id-ID')}`).join('\n');
-      if (!confirm(`Yakin ingin menghapus transaksi ini?\n\nDetail:\n${itemSummary}`)) {
+      if (!confirm(`Yakin ingin menghapus seluruh transaksi pada faktur ini?\n\nDetail:\n${itemSummary}`)) {
         return;
       }
 
-      const restoreStock = confirm('Apakah stok menu dari transaksi tes ini ingin dikembalikan otomatis?\n\n• OK = Hapus & Kembalikan Stok\n• Cancel = Hapus Saja (Stok Tetap)');
+      const restoreStock = confirm('Apakah stok menu dari transaksi ini ingin dikembalikan otomatis?\n\n• OK = Hapus Faktur & Kembalikan Stok\n• Cancel = Hapus Faktur Saja (Stok Tetap)');
       if (restoreStock) {
         matched.forEach(tx => {
           const prod = products.find(p => p.name === tx.Menu);
@@ -1379,7 +1385,7 @@
 
       saveTransactionsToCloud();
       renderHistoryTable();
-      alert(`✅ Transaksi berhasil dihapus permanen${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
+      alert(`✅ Faktur berhasil dihapus permanen${restoreStock ? ' dan stok telah dikembalikan' : ''}.`);
     }
 
     function forceClearStuckTransactions() {
@@ -1648,6 +1654,62 @@
       document.getElementById('historyModal').style.display = 'flex';
     }
 
+    // Gabungkan item dalam 1 transaksi menjadi 1 baris faktur utuh
+    function groupTransactionsByInvoice() {
+      const groupedList = [];
+      const invoiceMap = new Map();
+
+      monthlyTransactions.forEach((tx, idx) => {
+        const rawFaktur = String(tx.NoFaktur || '').trim();
+        const hasValidInvoice = rawFaktur !== '' && rawFaktur !== '-' && rawFaktur !== 'undefined' && rawFaktur !== 'null';
+
+        if (hasValidInvoice) {
+          if (!invoiceMap.has(rawFaktur)) {
+            const groupObj = {
+              noFaktur: rawFaktur,
+              tanggal: tx.Tanggal || '-',
+              waktu: tx.Waktu || '',
+              metode: tx.Metode || 'Tunai',
+              items: [],
+              totalQty: 0,
+              grandTotal: 0,
+              firstIndex: idx
+            };
+            invoiceMap.set(rawFaktur, groupObj);
+            groupedList.push(groupObj);
+          }
+          const grp = invoiceMap.get(rawFaktur);
+          grp.items.push({
+            menu: tx.Menu,
+            qty: tx.Qty || 0,
+            price: tx.Harga || 0,
+            total: tx.Total || 0
+          });
+          grp.totalQty += (tx.Qty || 0);
+          grp.grandTotal += (tx.Total || 0);
+        } else {
+          // Data lama tanpa nomor faktur tetap tampil per transaksi
+          groupedList.push({
+            noFaktur: '-',
+            tanggal: tx.Tanggal || '-',
+            waktu: tx.Waktu || '',
+            metode: tx.Metode || 'Tunai',
+            items: [{
+              menu: tx.Menu,
+              qty: tx.Qty || 0,
+              price: tx.Harga || 0,
+              total: tx.Total || 0
+            }],
+            totalQty: tx.Qty || 0,
+            grandTotal: tx.Total || 0,
+            firstIndex: idx
+          });
+        }
+      });
+
+      return groupedList;
+    }
+
     function renderHistoryTable() {
       const tbody = document.getElementById('historyTableBody');
       const query = (document.getElementById('historySearchInput')?.value || '').toLowerCase().trim();
@@ -1656,38 +1718,41 @@
       let totalOmset = 0;
       let totalExpense = monthlyExpenses.reduce((sum, e) => sum + e.Nominal, 0);
 
-      const indexedTx = monthlyTransactions.map((tx, idx) => ({ tx, idx }));
-      indexedTx.forEach(({ tx }) => {
+      monthlyTransactions.forEach(tx => {
         totalOmset += (tx.Total || 0);
       });
 
-      const filteredTx = indexedTx.filter(({ tx }) => {
+      const groupedInvoices = groupTransactionsByInvoice();
+
+      const filteredInvoices = groupedInvoices.filter(inv => {
         if (!query) return true;
-        const faktur = String(tx.NoFaktur || '').toLowerCase();
-        const menu = String(tx.Menu || '').toLowerCase();
-        return faktur.includes(query) || menu.includes(query);
+        const matchFaktur = inv.noFaktur.toLowerCase().includes(query);
+        const matchMenu = inv.items.some(it => String(it.menu || '').toLowerCase().includes(query));
+        return matchFaktur || matchMenu;
       });
 
-      if (filteredTx.length === 0) {
+      if (filteredInvoices.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Belum ada data transaksi yang sesuai</td></tr>';
       } else {
-        // Tampilkan transaksi terbaru di bagian paling atas
-        [...filteredTx].reverse().forEach(({ tx, idx }) => {
-          const noFaktur = String(tx.NoFaktur || '').trim() || '-';
-          const waktuText = tx.Waktu ? `${tx.Tanggal} (${tx.Waktu})` : tx.Tanggal;
+        // Tampilkan faktur terbaru di bagian paling atas
+        [...filteredInvoices].reverse().forEach(inv => {
+          const waktuText = inv.waktu ? `${inv.tanggal} (${inv.waktu})` : inv.tanggal;
+          const itemsHtml = inv.items
+            .map(it => `<div class="invoice-item-line">• ${it.menu} <strong>(${it.qty}x)</strong></div>`)
+            .join('');
 
           tbody.innerHTML += `
             <tr>
-              <td><span class="invoice-badge">${noFaktur}</span></td>
+              <td><span class="invoice-badge">${inv.noFaktur}</span></td>
               <td>${waktuText}</td>
-              <td>${tx.Menu}</td>
-              <td>${tx.Qty}</td>
-              <td><span style="font-weight:600; color:#0284c7;">${tx.Metode || 'Tunai'}</span></td>
-              <td>Rp ${(tx.Total || 0).toLocaleString('id-ID')}</td>
+              <td>${itemsHtml}</td>
+              <td><strong>${inv.totalQty}</strong> item</td>
+              <td><span style="font-weight:600; color:#0284c7;">${inv.metode}</span></td>
+              <td><strong>Rp ${inv.grandTotal.toLocaleString('id-ID')}</strong></td>
               <td>
                 <div class="action-btn-group">
-                  <button onclick="reprintTransactionRow(${idx})" title="Cetak Ulang Struk" style="background:#0f172a; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>
-                  <button onclick="deleteTransactionRow(${idx})" title="Hapus Transaksi Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>
+                  <button onclick="reprintTransactionRow(${inv.firstIndex})" title="Cetak Ulang Struk Faktur Ini" style="background:#0f172a; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🖨️</button>
+                  <button onclick="deleteTransactionRow(${inv.firstIndex})" title="Hapus Faktur Ini" style="background:#ef4444; color:#fff; border:none; padding:4px 7px; border-radius:4px; cursor:pointer; font-size:11px;">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -1929,21 +1994,22 @@
       excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
       excelData.push([""]);
 
-      excelData.push(["--- RINCIAN TRANSAKSI PER NO. FAKTUR ---"]);
-      excelData.push(["No", "No. Faktur", "Tanggal", "Jam", "Nama Menu", "Qty", "Harga Satuan", "Total", "Metode Bayar"]);
+      excelData.push(["--- RINCIAN TRANSAKSI PER NO. FAKTUR (1 FAKTUR = 1 TRANSAKSI) ---"]);
+      excelData.push(["No", "No. Faktur", "Tanggal", "Jam", "Rincian Item", "Total Qty", "Total Faktur", "Metode Bayar"]);
       
-      let noTx = 1;
-      monthlyTransactions.forEach(tx => {
+      const groupedInvoices = groupTransactionsByInvoice();
+      let noInv = 1;
+      groupedInvoices.forEach(inv => {
+        const itemsText = inv.items.map(it => `${it.menu} (${it.qty}x)`).join(", ");
         excelData.push([
-          noTx++,
-          tx.NoFaktur || "-",
-          tx.Tanggal,
-          tx.Waktu || "-",
-          tx.Menu,
-          tx.Qty,
-          tx.Harga,
-          tx.Total,
-          tx.Metode || "Tunai"
+          noInv++,
+          inv.noFaktur,
+          inv.tanggal,
+          inv.waktu || "-",
+          itemsText,
+          inv.totalQty,
+          inv.grandTotal,
+          inv.metode
         ]);
       });
       excelData.push([""]);
