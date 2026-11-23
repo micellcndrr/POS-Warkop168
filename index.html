@@ -68,9 +68,10 @@
 
     .checkout-section { border-top: 2px solid #f1f5f9; padding-top: 10px; }
     .row-summary.total { font-weight: 700; font-size: 16px; color: #16a34a; margin-bottom: 10px; display: flex; justify-content: space-between; }
-    .btn-action { width: 100%; padding: 9px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
-    .btn-pay-main { background: #16a34a; color: #fff; font-size: 14px; padding: 11px; }
+    .btn-action { width: 100%; padding: 8px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 5px; }
+    .btn-pay-main { background: #16a34a; color: #fff; font-size: 14px; padding: 10px; }
     .btn-history { background: #0284c7; color: #fff; }
+    .btn-shift-wa { background: #15803d; color: #fff; }
     .btn-expense { background: #dc2626; color: #fff; }
     .btn-clear { background: transparent; color: #ef4444; border: 1px solid #ef4444; }
 
@@ -120,13 +121,13 @@
 
     .owner-report-toolbar {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-top: 10px;
     }
     .btn-owner-tool {
       border: none;
-      padding: 10px 6px;
+      padding: 9px 6px;
       border-radius: 7px;
       color: #fff;
       font-weight: 700;
@@ -187,6 +188,16 @@
     .diff-plus { background: #dcfce7; color: #16a34a; }
     .diff-zero { background: #f1f5f9; color: #475569; }
 
+    /* Styling Peringkat Menu Terlaris & Tutup Shift */
+    .rank-badge { display: inline-block; min-width: 24px; text-align: center; padding: 2px 6px; border-radius: 6px; font-weight: 800; font-size: 11px; background: #e2e8f0; color: #334155; }
+    .rank-1 { background: #fef08a; color: #854d0e; border: 1px solid #facc15; }
+    .rank-2 { background: #e2e8f0; color: #1e293b; border: 1px solid #94a3b8; }
+    .rank-3 { background: #fed7aa; color: #9a3412; border: 1px solid #fb923c; }
+    .hour-bar-wrap { background: #e2e8f0; border-radius: 4px; height: 8px; width: 100%; overflow: hidden; margin-top: 3px; }
+    .hour-bar-fill { background: #ea580c; height: 100%; border-radius: 4px; }
+    .shift-preview-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 11.5px; white-space: pre-wrap; color: #14532d; max-height: 240px; overflow-y: auto; line-height: 1.35; }
+    .shift-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+
     @media (max-width: 1024px) {
       .menu-panel { padding: 12px; }
       .cart-panel { min-width: 270px; max-width: 310px; padding: 12px; }
@@ -200,8 +211,8 @@
       body { overflow: auto; }
       .container { flex-direction: column; height: 100vh; }
       .menu-panel { flex: 1; border-right: none; border-bottom: 2px solid #e2e8f0; overflow-y: auto; }
-      .cart-panel { flex: none; height: 305px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
-      .admin-form-grid-4, .admin-form-grid-5, .neraca-grid, .opname-filter-bar { grid-template-columns: 1fr; }
+      .cart-panel { flex: none; height: 335px; min-width: 100%; max-width: 100%; padding: 12px; box-shadow: none; }
+      .admin-form-grid-4, .admin-form-grid-5, .neraca-grid, .opname-filter-bar, .shift-form-grid { grid-template-columns: 1fr; }
       .owner-report-toolbar { grid-template-columns: repeat(2, 1fr); }
     }
 
@@ -289,6 +300,7 @@
 
         <button class="btn-action btn-pay-main" onclick="openPaymentModal()">💳 Transaksi & Pembayaran</button>
         <button class="btn-action btn-history" onclick="openHistoryModal('kasir')">📜 Laporan Penjualan & Faktur</button>
+        <button class="btn-action btn-shift-wa" onclick="openShiftReportModal()">📲 Laporan Tutup Shift (WA)</button>
         <button class="btn-action btn-expense" onclick="openExpenseModal()">💸 Catatan Pengeluaran</button>
         <button class="btn-action btn-clear" onclick="requestClearCartWithPin()">🔒 Kosongkan Keranjang</button>
       </div>
@@ -447,6 +459,61 @@
     </div>
   </div>
 
+  <!-- Modal Laporan Tutup Shift (Kirim WhatsApp & Cetak Struk) -->
+  <div id="shiftReportModal" class="modal-overlay" style="z-index: 1120;">
+    <div class="modal-content" style="max-width: 640px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <div>
+          <h3 style="color:#0f172a;">📲 Laporan Tutup Shift & Setoran Kasir</h3>
+          <small style="color:#64748b;">Otomatis rekap penjualan, pengeluaran, selisih laci & Top 5 menu siap kirim WA Owner.</small>
+        </div>
+        <button onclick="closeShiftReportModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div class="shift-form-grid">
+        <div>
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:3px;">👤 Nama Kasir Jaga:</label>
+          <input type="text" id="shiftCashierNameInput" class="input-field" style="margin:0; font-size:12px;" placeholder="Contoh: Budi / Kasir Malam" oninput="renderShiftReportPreview()">
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:3px;">🕒 Pilih Shift & Tanggal:</label>
+          <div style="display:flex; gap:6px;">
+            <select id="shiftPeriodSelect" class="input-field" style="margin:0; font-size:12px; flex:1;" onchange="renderShiftReportPreview()">
+              <option value="Shift Pagi">Shift Pagi</option>
+              <option value="Shift Malam">Shift Malam</option>
+              <option value="Full Day">Full Day</option>
+            </select>
+            <select id="shiftDateSelect" class="input-field" style="margin:0; font-size:12px; flex:1;" onchange="renderShiftReportPreview()"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="shift-form-grid">
+        <div>
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:3px;">🪙 Modal Awal Receh Laci (Opsional):</label>
+          <input type="number" id="shiftOpeningCashInput" inputmode="numeric" class="input-field" style="margin:0; font-size:12px;" placeholder="0" oninput="renderShiftReportPreview()">
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:3px;">💵 Uang Tunai Fisik di Laci (Opsional):</label>
+          <input type="number" id="shiftPhysicalCashInput" inputmode="numeric" class="input-field" style="margin:0; font-size:12px;" placeholder="Isi total uang tunai laci" oninput="renderShiftReportPreview()">
+        </div>
+      </div>
+
+      <div style="margin-top:4px;">
+        <div style="font-size:11px; font-weight:700; color:#15803d; margin-bottom:4px;">📄 Pratinjau Pesan WhatsApp:</div>
+        <div id="shiftReportPreviewText" class="shift-preview-box"></div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+        <button type="button" onclick="printShiftReceipt()" style="background:#0f172a; color:#fff; border:none; padding:9px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">🖨️ Cetak Struk Shift</button>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" onclick="copyShiftReportText()" style="background:#0284c7; color:#fff; border:none; padding:9px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📋 Salin Teks</button>
+          <button type="button" onclick="sendShiftReportWhatsApp()" style="background:#16a34a; color:#fff; border:none; padding:9px 14px; border-radius:6px; cursor:pointer; font-weight:700; font-size:12px;">📲 Kirim ke WA Owner</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Admin Dashboard (KHUSUS OWNER) -->
   <div id="adminModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 880px; height: 92vh;">
@@ -471,13 +538,14 @@
         </div>
       </div>
 
-      <!-- Tombol Menu Laporan & Stock Opname Khusus Owner -->
+      <!-- Tombol Menu Laporan, Peringkat Menu & Stock Opname Khusus Owner -->
       <div class="owner-report-toolbar">
+        <button onclick="openTopMenuModal()" class="btn-owner-tool" style="background:#ea580c;">🔥 Peringkat Menu Terlaris</button>
+        <button onclick="openShiftReportModal()" class="btn-owner-tool" style="background:#16a34a;">📲 Laporan Tutup Shift WA</button>
         <button onclick="openStockOpnameModal()" class="btn-owner-tool" style="background:#d97706;">📋 Stock Opname Cepat</button>
         <button onclick="openNeracaModal()" class="btn-owner-tool" style="background:#0f766e;">📊 Neraca & Laba Rugi</button>
         <button onclick="openHistoryModal('owner')" class="btn-owner-tool" style="background:#0284c7;">📜 Tutup Buku Bulanan</button>
-        <button onclick="openForecastModal()" class="btn-owner-tool" style="background:#7c3aed;">📈 Forecast Penjualan</button>
-        <button onclick="exportMonthlyRecapExcel()" class="btn-owner-tool" style="background:#15803d;">📥 Download Excel</button>
+        <button onclick="openForecastModal()" class="btn-owner-tool" style="background:#7c3aed;">📈 Forecast & Download Excel</button>
       </div>
 
       <!-- PIN Void Acak 4 Angka (Otomatis Berubah Setelah Dipakai) -->
@@ -532,11 +600,18 @@
         </form>
       </div>
 
-      <!-- Link QRIS -->
-      <div style="margin-top:10px; background:#f0f9ff; padding:10px; border-radius:8px; border:1px solid #bae6fd; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <span style="font-size:12px; font-weight:600;">Link URL QRIS:</span>
-        <input type="text" id="qrisUrlInput" class="input-field" placeholder="Tempel URL Gambar QRIS" style="margin:0; font-size:12px; flex:1; min-width:150px;">
-        <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Simpan</button>
+      <!-- Link QRIS & Nomor WA Owner -->
+      <div style="margin-top:10px; background:#f0f9ff; padding:10px; border-radius:8px; border:1px solid #bae6fd; display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; font-weight:700; white-space:nowrap;">URL QRIS:</span>
+          <input type="text" id="qrisUrlInput" class="input-field" placeholder="URL Gambar QRIS" style="margin:0; font-size:12px; flex:1;">
+          <button onclick="saveQrisUrl()" style="background:#0284c7; color:#fff; border:none; padding:7px 10px; border-radius:6px; cursor:pointer; font-weight:600; font-size:11px;">Simpan</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; font-weight:700; white-space:nowrap;">WA Owner:</span>
+          <input type="text" id="ownerWaInput" class="input-field" placeholder="6281510222645" style="margin:0; font-size:12px; flex:1;">
+          <button onclick="saveOwnerWaNumber()" style="background:#15803d; color:#fff; border:none; padding:7px 10px; border-radius:6px; cursor:pointer; font-weight:600; font-size:11px;">Simpan</button>
+        </div>
       </div>
 
       <!-- Tabel Kelola Menu -->
@@ -559,7 +634,76 @@
 
       <div style="margin-top:10px; border-top:2px solid #f1f5f9; padding-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
         <button onclick="openRestockLogModal()" style="background:#475569; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">📋 Audit Log Restok & Opname</button>
-        <span style="font-size:11px; color:#64748b;">Semua laporan keuangan terlindungi PIN Owner.</span>
+        <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:12px;">📥 Download Rekap Excel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Peringkat Menu Terlaris & Jam Ramai (KHUSUS OWNER) -->
+  <div id="topMenuModal" class="modal-overlay" style="z-index: 1110;">
+    <div class="modal-content" style="max-width: 840px; height: 90vh;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:2px solid #f1f5f9; padding-bottom:8px;">
+        <div>
+          <h3 style="color:#0f172a;">🔥 Peringkat Menu Terlaris & Analisis Jam Ramai</h3>
+          <small style="color:#64748b;">Pantau menu paling laku, jam puncak pembeli, dan menu yang belum terjual.</small>
+        </div>
+        <button onclick="closeTopMenuModal()" style="padding:4px 10px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button id="btnRankMonth" onclick="switchTopMenuPeriod('month')" style="flex:1; padding:8px; border-radius:6px; border:none; background:#ea580c; color:#fff; font-weight:700; font-size:12px; cursor:pointer;">📅 Rekap Bulan Ini</button>
+        <button id="btnRankToday" onclick="switchTopMenuPeriod('today')" style="flex:1; padding:8px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; color:#334155; font-weight:700; font-size:12px; cursor:pointer;">☀️ Rekap Hari Ini</button>
+      </div>
+
+      <div class="stat-card-grid">
+        <div class="stat-card" style="background:#fff7ed; border-color:#fed7aa;">
+          <div class="stat-card-title" style="color:#c2410c;">🏆 Juara 1 Terlaris</div>
+          <div class="stat-card-value" id="topMenuChampionName" style="color:#ea580c; font-size:13px;">-</div>
+        </div>
+        <div class="stat-card" style="background:#f0fdf4; border-color:#bbf7d0;">
+          <div class="stat-card-title" style="color:#15803d;">📂 Kategori Terlaris</div>
+          <div class="stat-card-value" id="topCategoryChampionName" style="color:#16a34a; font-size:13px; text-transform:capitalize;">-</div>
+        </div>
+        <div class="stat-card" style="background:#eff6ff; border-color:#bfdbfe;">
+          <div class="stat-card-title" style="color:#1d4ed8;">⏰ Jam Paling Ramai</div>
+          <div class="stat-card-value" id="topPeakHourText" style="color:#2563eb; font-size:13px;">-</div>
+        </div>
+      </div>
+
+      <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <h4 style="font-size:13px; color:#0f172a; margin-bottom:4px;">🥇 Peringkat Menu Terjual (Urut Porsi Terbanyak)</h4>
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width:55px; text-align:center;">Rank</th>
+                <th>Nama Menu</th>
+                <th>Kategori</th>
+                <th style="text-align:center;">Terjual</th>
+                <th>Total Omset</th>
+                <th style="text-align:center;">Kontribusi</th>
+              </tr>
+            </thead>
+            <tbody id="topMenuRankingTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="neraca-grid" style="margin-top:0;">
+          <div class="neraca-box">
+            <div class="neraca-box-header">
+              <span>⏰ Distribusi Jam Ramai Pembeli</span>
+            </div>
+            <div id="peakHoursListContainer" style="max-height:190px; overflow-y:auto;"></div>
+          </div>
+
+          <div class="neraca-box">
+            <div class="neraca-box-header">
+              <span>🧊 Menu Belum Terjual (0 Porsi)</span>
+              <span id="unsoldMenuCountBadge" style="font-size:11px; background:#fee2e2; color:#b91c1c; padding:1px 6px; border-radius:8px;">0</span>
+            </div>
+            <div id="unsoldMenuListContainer" style="max-height:190px; overflow-y:auto; font-size:12px; color:#475569;"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -767,7 +911,8 @@
         </div>
       </div>
 
-      <div style="margin-top:15px; text-align:right;">
+      <div style="margin-top:15px; display:flex; justify-content:space-between; gap:8px;">
+        <button onclick="exportMonthlyRecapExcel()" style="background:#15803d; color:#fff; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:700;">📥 Download Rekap Excel</button>
         <button onclick="closeForecastModal()" style="background:#0f172a; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">Tutup Analisis</button>
       </div>
     </div>
@@ -958,16 +1103,30 @@
     let initialCapital = parseFloat(localStorage.getItem('warkop_initial_capital')) || 0;
     let currentCategory = 'semua';
     let savedQrisUrl = localStorage.getItem('warkop_qris_url') || 'qris.warkop.JPG';
+    let savedOwnerWa = localStorage.getItem('warkop_owner_wa') || '6281510222645';
 
     const adminPin = '4M112208';
     let isOwnerLoggedIn = false;
     let currentHistoryViewMode = 'kasir';
-    let opnameDrafts = {}; // Menyimpan input sementara Stock Opname per ID menu
+    let opnameDrafts = {};
+    let topMenuPeriod = 'month';
 
     function toArraySafe(val) {
       if (!val) return [];
       const arr = Array.isArray(val) ? val : Object.values(val);
       return arr.filter(item => item && typeof item === 'object' && item.Menu);
+    }
+
+    function formatWaNumber(raw) {
+      let cleaned = String(raw || '').replace(/\D/g, '');
+      if (cleaned.startsWith('0')) {
+        cleaned = '62' + cleaned.slice(1);
+      }
+      return cleaned || '6281510222645';
+    }
+
+    function getTodayDateString() {
+      return new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
     function generateNextInvoiceNumber() {
@@ -1139,6 +1298,9 @@
         if (document.getElementById('stockOpnameModal').style.display === 'flex') {
           renderStockOpnameTable();
         }
+        if (document.getElementById('topMenuModal').style.display === 'flex') {
+          renderTopMenuRanking();
+        }
       });
 
       db.ref('warkop_data/voidPin').on('value', (snapshot) => {
@@ -1174,6 +1336,12 @@
         if (document.getElementById('neracaModal').style.display === 'flex') {
           renderNeracaReport();
         }
+        if (document.getElementById('topMenuModal').style.display === 'flex') {
+          renderTopMenuRanking();
+        }
+        if (document.getElementById('shiftReportModal').style.display === 'flex') {
+          renderShiftReportPreview();
+        }
       });
 
       db.ref('warkop_data/monthlyExpenses').on('value', (snapshot) => {
@@ -1187,6 +1355,9 @@
         }
         if (document.getElementById('neracaModal').style.display === 'flex') {
           renderNeracaReport();
+        }
+        if (document.getElementById('shiftReportModal').style.display === 'flex') {
+          renderShiftReportPreview();
         }
       });
 
@@ -1222,6 +1393,16 @@
           localStorage.setItem('warkop_qris_url', savedQrisUrl);
         } else {
           db.ref('warkop_data/qrisUrl').set(savedQrisUrl);
+        }
+      });
+
+      db.ref('warkop_data/ownerWa').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          savedOwnerWa = formatWaNumber(val);
+          localStorage.setItem('warkop_owner_wa', savedOwnerWa);
+        } else {
+          db.ref('warkop_data/ownerWa').set(savedOwnerWa);
         }
       });
     }
@@ -1274,6 +1455,7 @@
         renderAdminStockTable();
         populateRestockSelect();
         document.getElementById('qrisUrlInput').value = savedQrisUrl;
+        document.getElementById('ownerWaInput').value = savedOwnerWa;
         document.getElementById('adminModal').style.display = 'flex';
       } else if (inputPin !== null) {
         alert('PIN Admin Salah! Akses Ditolak.');
@@ -1289,6 +1471,8 @@
       document.getElementById('forecastModal').style.display = 'none';
       document.getElementById('restockLogModal').style.display = 'none';
       document.getElementById('stockOpnameModal').style.display = 'none';
+      document.getElementById('topMenuModal').style.display = 'none';
+      document.getElementById('shiftReportModal').style.display = 'none';
     }
 
     function renderMenu(items) {
@@ -1793,7 +1977,369 @@
     }
 
     /* =================================================================
-       4. STOCK OPNAME CEPAT (KHUSUS OWNER)
+       4. LAPORAN TUTUP SHIFT (KIRIM WHATSAPP & CETAK STRUK)
+       ================================================================= */
+    function openShiftReportModal() {
+      const dateSelect = document.getElementById('shiftDateSelect');
+      const todayStr = getTodayDateString();
+      const uniqueDates = new Set([todayStr]);
+      monthlyTransactions.forEach(tx => {
+        if (tx.Tanggal) uniqueDates.add(tx.Tanggal);
+      });
+      monthlyExpenses.forEach(exp => {
+        if (exp.Tanggal) uniqueDates.add(exp.Tanggal);
+      });
+
+      dateSelect.innerHTML = '';
+      Array.from(uniqueDates).forEach(d => {
+        const label = (d === todayStr) ? `${d} (Hari Ini)` : d;
+        dateSelect.innerHTML += `<option value="${d}">${label}</option>`;
+      });
+      dateSelect.value = todayStr;
+
+      const savedCashier = localStorage.getItem('warkop_last_cashier_name') || '';
+      document.getElementById('shiftCashierNameInput').value = savedCashier;
+      document.getElementById('shiftOpeningCashInput').value = '';
+      document.getElementById('shiftPhysicalCashInput').value = '';
+
+      renderShiftReportPreview();
+      document.getElementById('shiftReportModal').style.display = 'flex';
+    }
+
+    function closeShiftReportModal() {
+      document.getElementById('shiftReportModal').style.display = 'none';
+    }
+
+    function buildShiftSummaryData() {
+      const cashierName = (document.getElementById('shiftCashierNameInput').value || '').trim() || 'Kasir Warkop';
+      const shiftLabel = document.getElementById('shiftPeriodSelect').value || 'Shift Harian';
+      const targetDate = document.getElementById('shiftDateSelect').value || getTodayDateString();
+      const openingCash = parseFloat(document.getElementById('shiftOpeningCashInput').value) || 0;
+      const physicalRaw = document.getElementById('shiftPhysicalCashInput').value.trim();
+      const hasPhysicalCash = physicalRaw !== '' && !isNaN(parseFloat(physicalRaw));
+      const physicalCash = hasPhysicalCash ? parseFloat(physicalRaw) : 0;
+
+      if (document.getElementById('shiftCashierNameInput').value.trim()) {
+        localStorage.setItem('warkop_last_cashier_name', document.getElementById('shiftCashierNameInput').value.trim());
+      }
+
+      const dayTx = monthlyTransactions.filter(tx => tx.Tanggal === targetDate);
+      const dayExp = monthlyExpenses.filter(exp => exp.Tanggal === targetDate);
+
+      let cashTotal = 0, qrisTotal = 0, transferTotal = 0, debitTotal = 0, totalOmset = 0, totalQty = 0;
+      const invoiceSet = new Set();
+      const menuMap = {};
+
+      dayTx.forEach(tx => {
+        const amt = tx.Total || 0;
+        const q = tx.Qty || 0;
+        totalOmset += amt;
+        totalQty += q;
+        if (tx.NoFaktur && tx.NoFaktur !== '-') invoiceSet.add(tx.NoFaktur);
+
+        const m = String(tx.Metode || 'Tunai').toLowerCase();
+        if (m.includes('tunai')) cashTotal += amt;
+        else if (m.includes('qris')) qrisTotal += amt;
+        else if (m.includes('transfer')) transferTotal += amt;
+        else if (m.includes('debit')) debitTotal += amt;
+        else cashTotal += amt;
+
+        if (!menuMap[tx.Menu]) menuMap[tx.Menu] = { qty: 0, total: 0 };
+        menuMap[tx.Menu].qty += q;
+        menuMap[tx.Menu].total += amt;
+      });
+
+      const totalExpense = dayExp.reduce((s, e) => s + (e.Nominal || 0), 0);
+      const expectedCashInDrawer = openingCash + cashTotal - totalExpense;
+      const cashDiff = physicalCash - expectedCashInDrawer;
+
+      const topMenus = Object.entries(menuMap)
+        .map(([name, val]) => ({ name, qty: val.qty, total: val.total }))
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 5);
+
+      const lowStocks = products.filter(p => p.stock <= 5).slice(0, 8);
+
+      const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+      let msg = `*LAPORAN TUTUP SHIFT - WARKOP PANCONG 168*\n`;
+      msg += `📅 Tanggal : ${targetDate} (${nowTime})\n`;
+      msg += `🕒 Shift   : ${shiftLabel}\n`;
+      msg += `👤 Kasir   : ${cashierName}\n`;
+      msg += `--------------------------------\n`;
+      msg += `*RINGKASAN PENJUALAN*\n`;
+      msg += `• Jumlah Transaksi : ${invoiceSet.size || dayTx.length} faktur (${totalQty} porsi)\n`;
+      msg += `• Tunai            : ${fmt(cashTotal)}\n`;
+      msg += `• QRIS             : ${fmt(qrisTotal)}\n`;
+      msg += `• Transfer         : ${fmt(transferTotal)}\n`;
+      msg += `• Debit EDC        : ${fmt(debitTotal)}\n`;
+      msg += `*TOTAL OMSET       : ${fmt(totalOmset)}*\n`;
+      msg += `--------------------------------\n`;
+      msg += `*PENGELUARAN HARI INI*\n`;
+      if (dayExp.length === 0) {
+        msg += `• Tidak ada pengeluaran\n`;
+      } else {
+        dayExp.forEach(e => {
+          msg += `• ${e.Nama}: ${fmt(e.Nominal)}\n`;
+        });
+      }
+      msg += `*TOTAL PENGELUARAN : ${fmt(totalExpense)}*\n`;
+      msg += `--------------------------------\n`;
+      msg += `*REKAP SETORAN LACI TUNAI*\n`;
+      if (openingCash > 0) msg += `• Modal Awal Receh : ${fmt(openingCash)}\n`;
+      msg += `• Uang Tunai Sistem: ${fmt(expectedCashInDrawer)}\n`;
+      if (hasPhysicalCash) {
+        msg += `• Uang Fisik Laci  : ${fmt(physicalCash)}\n`;
+        const statusStr = cashDiff === 0 ? 'PAS ✅' : (cashDiff > 0 ? `LEBIH +${fmt(cashDiff)} ⚠️` : `KURANG -${fmt(Math.abs(cashDiff))} ❌`);
+        msg += `• Selisih Laci     : ${statusStr}\n`;
+      }
+      msg += `--------------------------------\n`;
+      msg += `*TOP 5 MENU TERLARIS*\n`;
+      if (topMenus.length === 0) {
+        msg += `• Belum ada penjualan\n`;
+      } else {
+        topMenus.forEach((m, i) => {
+          msg += `${i + 1}. ${m.name} (${m.qty}x)\n`;
+        });
+      }
+      if (lowStocks.length > 0) {
+        msg += `--------------------------------\n`;
+        msg += `*⚠️ STOK MENIPIS / HABIS*\n`;
+        lowStocks.forEach(p => {
+          msg += `• ${p.name}: sisa ${p.stock}\n`;
+        });
+      }
+
+      return {
+        msg,
+        cashierName,
+        shiftLabel,
+        targetDate,
+        nowTime,
+        invoiceCount: invoiceSet.size || dayTx.length,
+        totalQty,
+        cashTotal,
+        qrisTotal,
+        transferTotal,
+        debitTotal,
+        totalOmset,
+        totalExpense,
+        expectedCashInDrawer,
+        hasPhysicalCash,
+        physicalCash,
+        cashDiff
+      };
+    }
+
+    function renderShiftReportPreview() {
+      const data = buildShiftSummaryData();
+      const box = document.getElementById('shiftReportPreviewText');
+      if (box) box.innerText = data.msg;
+    }
+
+    function copyShiftReportText() {
+      const data = buildShiftSummaryData();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(data.msg).then(() => {
+          alert('✅ Teks laporan tutup shift berhasil disalin! Siap ditempel ke WhatsApp.');
+        });
+      } else {
+        alert('Salin manual dari kotak pratinjau di atas.');
+      }
+    }
+
+    function sendShiftReportWhatsApp() {
+      const data = buildShiftSummaryData();
+      const waTarget = formatWaNumber(savedOwnerWa);
+      const url = `https://wa.me/${waTarget}?text=${encodeURIComponent(data.msg)}`;
+      window.open(url, '_blank');
+    }
+
+    function printShiftReceipt() {
+      const d = buildShiftSummaryData();
+      const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+      const printArea = document.getElementById('receiptPrintArea');
+
+      printArea.innerHTML = `
+        <div class="receipt-header">
+          <h2 style="font-size:12px; font-weight:bold;">WARKOP PANCONG 168</h2>
+          <p style="font-size:9px; font-weight:bold;">LAPORAN TUTUP SHIFT</p>
+          <p style="font-size:9px;">${d.targetDate} ${d.nowTime}</p>
+        </div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>Shift</span><span>${d.shiftLabel}</span></div>
+        <div class="receipt-row"><span>Kasir</span><span>${d.cashierName}</span></div>
+        <div class="receipt-row"><span>Transaksi</span><span>${d.invoiceCount} faktur</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>Tunai</span><span>${fmt(d.cashTotal)}</span></div>
+        <div class="receipt-row"><span>QRIS</span><span>${fmt(d.qrisTotal)}</span></div>
+        <div class="receipt-row"><span>Transfer</span><span>${fmt(d.transferTotal)}</span></div>
+        <div class="receipt-row"><span>Debit</span><span>${fmt(d.debitTotal)}</span></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>TOTAL OMSET</span><span>${fmt(d.totalOmset)}</span></div>
+        <div class="receipt-divider"></div>
+        <div class="receipt-row"><span>Pengeluaran</span><span>${fmt(d.totalExpense)}</span></div>
+        <div class="receipt-row" style="font-weight:bold;"><span>Setoran Tunai</span><span>${fmt(d.expectedCashInDrawer)}</span></div>
+        ${d.hasPhysicalCash ? `
+        <div class="receipt-row"><span>Fisik Laci</span><span>${fmt(d.physicalCash)}</span></div>
+        <div class="receipt-row"><span>Selisih</span><span>${d.cashDiff === 0 ? 'PAS' : fmt(d.cashDiff)}</span></div>
+        ` : ''}
+        <div class="receipt-divider"></div>
+        <div class="receipt-footer"><p>Warkop Pancong 168</p></div>
+      `;
+      window.print();
+    }
+
+    /* =================================================================
+       5. PERINGKAT MENU TERLARIS & JAM RAMAI (KHUSUS OWNER)
+       ================================================================= */
+    function openTopMenuModal() {
+      if (!ensureOwnerAccess()) return;
+      topMenuPeriod = 'month';
+      switchTopMenuPeriod('month');
+      document.getElementById('topMenuModal').style.display = 'flex';
+    }
+
+    function closeTopMenuModal() {
+      document.getElementById('topMenuModal').style.display = 'none';
+    }
+
+    function switchTopMenuPeriod(period) {
+      topMenuPeriod = period;
+      const btnMonth = document.getElementById('btnRankMonth');
+      const btnToday = document.getElementById('btnRankToday');
+      if (period === 'month') {
+        btnMonth.style.background = '#ea580c';
+        btnMonth.style.color = '#fff';
+        btnMonth.style.border = 'none';
+        btnToday.style.background = '#f8fafc';
+        btnToday.style.color = '#334155';
+        btnToday.style.border = '1px solid #cbd5e1';
+      } else {
+        btnToday.style.background = '#ea580c';
+        btnToday.style.color = '#fff';
+        btnToday.style.border = 'none';
+        btnMonth.style.background = '#f8fafc';
+        btnMonth.style.color = '#334155';
+        btnMonth.style.border = '1px solid #cbd5e1';
+      }
+      renderTopMenuRanking();
+    }
+
+    function renderTopMenuRanking() {
+      const todayStr = getTodayDateString();
+      const sourceTx = (topMenuPeriod === 'today')
+        ? monthlyTransactions.filter(tx => tx.Tanggal === todayStr)
+        : monthlyTransactions;
+
+      const menuStats = {};
+      const catStats = {};
+      const hourStats = {};
+      let grandOmset = 0;
+
+      sourceTx.forEach(tx => {
+        const qty = tx.Qty || 0;
+        const total = tx.Total || 0;
+        const cat = tx.Kategori || 'lainnya';
+        grandOmset += total;
+
+        if (!menuStats[tx.Menu]) {
+          menuStats[tx.Menu] = { name: tx.Menu, category: cat, qty: 0, total: 0 };
+        }
+        menuStats[tx.Menu].qty += qty;
+        menuStats[tx.Menu].total += total;
+
+        catStats[cat] = (catStats[cat] || 0) + qty;
+
+        const rawTime = String(tx.Waktu || '').trim();
+        if (rawTime.includes(':') || rawTime.includes('.')) {
+          const hourPart = rawTime.split(/[:.]/)[0].padStart(2, '0');
+          const hourLabel = `${hourPart}:00`;
+          if (!hourStats[hourLabel]) hourStats[hourLabel] = { label: hourLabel, qty: 0, total: 0 };
+          hourStats[hourLabel].qty += qty;
+          hourStats[hourLabel].total += total;
+        }
+      });
+
+      const rankedMenus = Object.values(menuStats).sort((a, b) => b.qty - a.qty || b.total - a.total);
+      const rankedCategories = Object.entries(catStats).sort((a, b) => b[1] - a[1]);
+      const rankedHours = Object.values(hourStats).sort((a, b) => b.qty - a.qty);
+
+      document.getElementById('topMenuChampionName').innerText = rankedMenus.length > 0
+        ? `${rankedMenus[0].name} (${rankedMenus[0].qty}x)`
+        : 'Belum ada data';
+
+      document.getElementById('topCategoryChampionName').innerText = rankedCategories.length > 0
+        ? `${rankedCategories[0][0]} (${rankedCategories[0][1]} porsi)`
+        : 'Belum ada data';
+
+      document.getElementById('topPeakHourText').innerText = rankedHours.length > 0
+        ? `Pukul ${rankedHours[0].label} (${rankedHours[0].qty} item)`
+        : 'Belum ada data';
+
+      // Render tabel ranking menu
+      const tbody = document.getElementById('topMenuRankingTableBody');
+      tbody.innerHTML = '';
+
+      if (rankedMenus.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Belum ada transaksi pada periode ini</td></tr>';
+      } else {
+        rankedMenus.forEach((item, idx) => {
+          const rank = idx + 1;
+          const badgeClass = rank === 1 ? 'rank-badge rank-1' : (rank === 2 ? 'rank-badge rank-2' : (rank === 3 ? 'rank-badge rank-3' : 'rank-badge'));
+          const sharePct = grandOmset > 0 ? ((item.total / grandOmset) * 100).toFixed(1) : '0.0';
+
+          tbody.innerHTML += `
+            <tr>
+              <td style="text-align:center;"><span class="${badgeClass}">#${rank}</span></td>
+              <td><strong>${item.name}</strong></td>
+              <td style="text-transform:capitalize; color:#64748b;">${item.category}</td>
+              <td style="text-align:center;"><strong>${item.qty}</strong> porsi</td>
+              <td>Rp ${item.total.toLocaleString('id-ID')}</td>
+              <td style="text-align:center; color:#0284c7; font-weight:700;">${sharePct}%</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Render jam ramai
+      const hourContainer = document.getElementById('peakHoursListContainer');
+      if (rankedHours.length === 0) {
+        hourContainer.innerHTML = '<p style="font-size:12px; color:#94a3b8;">Belum ada data jam transaksi.</p>';
+      } else {
+        const maxHourQty = Math.max(...rankedHours.map(h => h.qty), 1);
+        const sortedByClock = [...rankedHours].sort((a, b) => a.label.localeCompare(b.label));
+        hourContainer.innerHTML = sortedByClock.map(h => {
+          const widthPct = Math.round((h.qty / maxHourQty) * 100);
+          return `
+            <div style="margin-bottom:7px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;">
+                <strong>⏰ ${h.label}</strong>
+                <span>${h.qty} porsi (Rp ${h.total.toLocaleString('id-ID')})</span>
+              </div>
+              <div class="hour-bar-wrap"><div class="hour-bar-fill" style="width:${widthPct}%;"></div></div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render menu belum terjual
+      const soldNames = new Set(rankedMenus.map(m => m.name));
+      const unsoldList = products.filter(p => !soldNames.has(p.name));
+      document.getElementById('unsoldMenuCountBadge').innerText = `${unsoldList.length} menu`;
+
+      const unsoldContainer = document.getElementById('unsoldMenuListContainer');
+      if (unsoldList.length === 0) {
+        unsoldContainer.innerHTML = '<p style="color:#16a34a; font-weight:600;">🎉 Semua menu sudah pernah terjual!</p>';
+      } else {
+        unsoldContainer.innerHTML = unsoldList
+          .map(p => `<div style="padding:3px 0; border-bottom:1px dashed #e2e8f0;">• ${p.name} <span style="color:#94a3b8;">(Stok: ${p.stock})</span></div>`)
+          .join('');
+      }
+    }
+
+    /* =================================================================
+       6. STOCK OPNAME CEPAT (KHUSUS OWNER)
        ================================================================= */
     function openStockOpnameModal() {
       if (!ensureOwnerAccess()) return;
@@ -1963,7 +2509,7 @@
     }
 
     /* =================================================================
-       5. NERACA & LAPORAN LABA RUGI (KHUSUS OWNER)
+       7. NERACA & LAPORAN LABA RUGI (KHUSUS OWNER)
        ================================================================= */
     function computeNeracaAndProfitLoss() {
       let totalRevenue = 0;
@@ -2485,6 +3031,21 @@
       }
     }
 
+    function saveOwnerWaNumber() {
+      const raw = document.getElementById('ownerWaInput').value.trim();
+      if (!raw) {
+        alert('Masukkan nomor WhatsApp Owner!');
+        return;
+      }
+      savedOwnerWa = formatWaNumber(raw);
+      document.getElementById('ownerWaInput').value = savedOwnerWa;
+      localStorage.setItem('warkop_owner_wa', savedOwnerWa);
+      if (isCloudReady && db) {
+        db.ref('warkop_data/ownerWa').set(savedOwnerWa);
+      }
+      alert(`Nomor WhatsApp Owner (${savedOwnerWa}) berhasil disimpan ke Cloud!`);
+    }
+
     function renderAdminStockTable() {
       const tbody = document.getElementById('adminStockTableBody');
       tbody.innerHTML = '';
@@ -2636,12 +3197,13 @@
         ["LAPORAN REKAP BULANAN, LABA RUGI & NERACA WARKOP PANCONG 168"],
         ["Tanggal Ekspor:", new Date().toLocaleDateString('id-ID')],
         [""],
-        ["--- RINGKASAN PENJUALAN PER MENU ---"],
-        ["No", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
+        ["--- PERINGKAT MENU TERLARIS BULANAN ---"],
+        ["Peringkat", "Nama Menu", "Kategori", "Harga Satuan", "Qty Terjual", "Total Omset"]
       ];
 
+      const sortedMenus = Object.entries(menuSummary).sort((a, b) => b[1].Qty - a[1].Qty);
       let no = 1;
-      for (const [menuName, val] of Object.entries(menuSummary)) {
+      for (const [menuName, val] of sortedMenus) {
         excelData.push([no++, menuName, val.Kategori, val.Harga, val.Qty, val.Total]);
       }
       excelData.push(["", "TOTAL OMSET PENJUALAN BULANAN", "", "", "", totalOmset]);
